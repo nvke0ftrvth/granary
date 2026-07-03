@@ -10,8 +10,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.Data;
 
 @Entity
+@Data
 @Table(name = "users")
 public class User {
 
@@ -30,9 +32,6 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     private List<Recipe> recipes = new ArrayList<>();
-
-    public User() {
-    }
 
     public User(String username, String email, String password) {
         this.username = username;

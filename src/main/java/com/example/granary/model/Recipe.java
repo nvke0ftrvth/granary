@@ -14,9 +14,16 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "recipes")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Recipe {
 
     @Id
@@ -54,8 +61,6 @@ public class Recipe {
     @Column(name = "updated_at")
     private LocalDateTime updated;
 
-    public Recipe() {
-    }
 
     public Recipe(String title, User user) {
         this.title = title;

@@ -27,9 +27,15 @@
 		<url/>
 	</scm>
 	<properties>
+    	<mapstruct.version>1.5.5.Final</mapstruct.version>
 		<java.version>25</java.version>
 	</properties>
 	<dependencies>
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct</artifactId>
+			<version>${mapstruct.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-h2console</artifactId>
@@ -122,6 +128,11 @@
 									<groupId>org.projectlombok</groupId>
 									<artifactId>lombok</artifactId>
 								</path>
+								<path>
+									<groupId>org.mapstruct</groupId>
+                      				<artifactId>mapstruct-processor</artifactId>
+                        			<version>${mapstruct.version}</version>
+                  				</path>
 							</annotationProcessorPaths>
 						</configuration>
 					</execution>
