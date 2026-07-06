@@ -6,6 +6,6 @@ import java.util.Optional;
 
 
 @RepositoryRestResource(path = "packages", collectionResourceRel = "packages")
-public interface UserRepository extends JpaRepository<User, String> {
+public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
 }

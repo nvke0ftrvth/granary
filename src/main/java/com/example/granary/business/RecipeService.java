@@ -19,7 +19,9 @@ import com.example.granary.repo.RecipeImageRepository;
 import com.example.granary.repo.RecipeRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RecipeService {
@@ -32,12 +34,15 @@ public class RecipeService {
     public RecipeResponseDto create(RecipeRequestDto dto) {
         Recipe recipe = recipeMapper.toEntity(dto);
         Recipe saved = recipeRepository.save(recipe);
+        log.info("Recipe with id " + saved.getId() + " created");
         return recipeMapper.toResponseDto(saved);
     }
 
     public RecipeResponseDto getById(Long id) {
         Recipe recipe = recipeRepository.findById(id)
                 .orElseThrow(() -> new RecipeNotFoundException(id));
+                
+        log.info("Recipe with id " + recipe.getId() + " retreived");
         return recipeMapper.toResponseDto(recipe);
     }
 
@@ -59,6 +64,8 @@ public class RecipeService {
         Recipe existing = recipeRepository.findById(id)
                 .orElseThrow(() -> new RecipeNotFoundException(id));
         recipeMapper.updateEntityFromDto(dto, existing); // updates in place
+        log.info("Recipe with id " + id + " updated");
+    
         return recipeMapper.toResponseDto(recipeRepository.save(existing));
     }
 
@@ -66,6 +73,7 @@ public class RecipeService {
         recipeRepository.findById(id)
                 .orElseThrow(() -> new RecipeNotFoundException(id));
         recipeRepository.deleteById(id);
+        log.info("Recipe with id " + id + " deleted");
     }
 
     @Query("SELECT r FROM Recipe r WHERE " +
@@ -97,6 +105,7 @@ public class RecipeService {
 
             recipe.getImages().add(image);
         }
+        log.info("Recipe with id " + id + " uploaded images");
 
         return recipeMapper.toResponseDto(recipeRepository.save(recipe));
     }
@@ -111,6 +120,7 @@ public class RecipeService {
         imageStorageService.delete(image.getFilename());
         recipe.getImages().remove(image);
         recipeRepository.save(recipe);
+        log.info("Recipe with id " + recipeId + " removed images");
     }
 
     public RecipeResponseDto reorderImages(Long recipeId, List<Long> imageIds) {
