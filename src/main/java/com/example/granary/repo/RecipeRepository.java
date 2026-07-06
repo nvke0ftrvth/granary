@@ -7,11 +7,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 import com.example.granary.model.Recipe;
-
 @RepositoryRestResource(path = "packages", collectionResourceRel = "packages")
 public interface RecipeRepository extends JpaRepository<Recipe, Long> {
     Optional<Recipe> findByTitle(String title);
     List<Recipe> findByUserUsername(String username);
-    List<Recipe> findByTagsIn(List<String> tags);
+    List<Recipe> findByTagsContaining(String tag);
+    List<Recipe> findByIngredientsContaining(String ingredient);
     Optional<Recipe> findByDescriptionContaining(String description);
+    List<Recipe> findByTitleContainingIgnoreCase(String query);
 }

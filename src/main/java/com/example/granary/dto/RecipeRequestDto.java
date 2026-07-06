@@ -30,7 +30,7 @@ public class RecipeRequestDto {
 
     @NotEmpty(message = "At least one step is required")
     private List<String> steps;
-    private List<String> imageUrls;
+    private List<RecipeImageDto> images;  // replaces single imageUrl
     private List<String> tags;
     private Period prepTime;
     private User user;

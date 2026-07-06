@@ -23,7 +23,7 @@ public class RecipeResponseDto {
     private List<Ingredient> ingredients;
     private List<Ingredient> optionalIngredients;
     private List<String> steps;
-    private List<String> imageUrls;
+    private List<RecipeImageDto> images;  // replaces single imageUrl
     private List<String> tags;
     private Period prepTime;
     private User user;
