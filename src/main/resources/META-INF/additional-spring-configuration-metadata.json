@@ -1,0 +1,5 @@
+{"properties": [{
+  "name": "app.upload.dir",
+  "type": "java.lang.String",
+  "description": "Local directory for image uploading for development. Need to utilize Amazon S3/Cloudflare R2 client in future"
+}]}
