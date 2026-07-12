@@ -1,4 +1,4 @@
-package com.example.granary.web;
+package com.example.granary.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;

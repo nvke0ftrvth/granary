@@ -39,14 +39,16 @@ public class RecipeService {
     }
 
     public RecipeResponseDto getById(Long id) {
+        log.debug("Fetching recipe by id: {}", id);
         Recipe recipe = recipeRepository.findById(id)
                 .orElseThrow(() -> new RecipeNotFoundException(id));
                 
-        log.info("Recipe with id " + recipe.getId() + " retreived");
+        log.info("Recipe with id " + recipe.getId() + " retrieved");
         return recipeMapper.toResponseDto(recipe);
     }
 
     public List<RecipeResponseDto> getAll() {
+        log.debug("Fetching all recipes");
         return recipeRepository.findAll()
                 .stream()
                 .map(recipeMapper::toResponseDto)
@@ -54,6 +56,7 @@ public class RecipeService {
     }
 
     public List<RecipeResponseDto> getByTag(String tag){
+        log.debug("Fetching recipes by tag: {}", tag);
         return recipeRepository.findByTagsContaining(tag)
             .stream()
             .map(recipeMapper::toResponseDto)

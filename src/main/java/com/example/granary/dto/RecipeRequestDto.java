@@ -1,10 +1,10 @@
 package com.example.granary.dto;
 
 import java.time.LocalDateTime;
-import java.time.Period;
 import java.util.List;
 
 import com.example.granary.model.Ingredient;
+import com.example.granary.model.Step;
 import com.example.granary.model.User;
 
 import jakarta.validation.constraints.NotBlank;
@@ -26,13 +26,12 @@ public class RecipeRequestDto {
 
     @NotEmpty(message = "At least one ingredient is required")
     private List<Ingredient> ingredients;
-    private List<Ingredient> optionalIngredients;
 
     @NotEmpty(message = "At least one step is required")
-    private List<String> steps;
+    private List<Step> steps;
     private List<RecipeImageDto> images;  // replaces single imageUrl
     private List<String> tags;
-    private Period prepTime;
+    private String prepTime;
     private User user;
     private LocalDateTime updated;
 }
