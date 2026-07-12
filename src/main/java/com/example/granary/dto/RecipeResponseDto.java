@@ -1,14 +1,13 @@
 package com.example.granary.dto;
 
 import java.time.LocalDateTime;
-import java.time.Period;
 import java.util.List;
 
 import com.example.granary.model.Ingredient;
+import com.example.granary.model.Step;
 import com.example.granary.model.User;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -21,11 +20,10 @@ public class RecipeResponseDto {
     private String title;
     private String description;
     private List<Ingredient> ingredients;
-    private List<Ingredient> optionalIngredients;
-    private List<String> steps;
+    private List<Step> steps;
     private List<RecipeImageDto> images;  // replaces single imageUrl
     private List<String> tags;
-    private Period prepTime;
+    private String prepTime;
     private User user;
     private LocalDateTime updated;
 

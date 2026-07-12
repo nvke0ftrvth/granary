@@ -1,19 +1,10 @@
 package com.example.granary.model;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.Embeddable;
 
-@Entity
-@Table(name = "ingredients")
+@Embeddable
 public class Ingredient {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     @Column(nullable = false)
     private String name;
@@ -25,10 +16,6 @@ public class Ingredient {
     private Integer quantity;
 
     public Ingredient() {
-    }
-
-    public Long getId() {
-        return id;
     }
 
     public String getName() {

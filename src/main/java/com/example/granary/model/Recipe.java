@@ -1,11 +1,12 @@
 package com.example.granary.model;
 
 import java.time.LocalDateTime;
-import java.time.Period;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -16,9 +17,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -40,25 +39,26 @@ public class Recipe {
     @Column(length = 1000)
     private String description;
 
-    @Transient
+    @ElementCollection
+    @CollectionTable(name = "recipe_ingredients", joinColumns = @JoinColumn(name = "recipe_id"))
     private List<Ingredient> ingredients;
 
-    @Transient
-    private List<Ingredient> optionalIngredients;
-
-    @Transient
-    private List<String> steps;
+    @ElementCollection
+    @CollectionTable(name = "recipe_steps", joinColumns = @JoinColumn(name = "recipe_id"))
+    private List<Step> steps;
 
     @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("displayOrder ASC")
     @ToString.Exclude
     private List<RecipeImage> images;
 
-    @Transient
+    @ElementCollection
+    @CollectionTable(name = "recipe_tags", joinColumns = @JoinColumn(name = "recipe_id"))
+    @Column(name = "tag")
     private List<String> tags;
 
-    @Transient
-    private Period prepTime;
+    @Column(name = "prep_time")
+    private String prepTime;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -101,19 +101,11 @@ public class Recipe {
         this.ingredients = ingredients;
     }
 
-    public List<Ingredient> getOptionalIngredients() {
-        return optionalIngredients;
-    }
-
-    public void setOptionalIngredients(List<Ingredient> optionalIngredients) {
-        this.optionalIngredients = optionalIngredients;
-    }
-
-    public List<String> getSteps() {
+    public List<Step> getSteps() {
         return steps;
     }
 
-    public void setSteps(List<String> steps) {
+    public void setSteps(List<Step> steps) {
         this.steps = steps;
     }
 
@@ -121,7 +113,7 @@ public class Recipe {
         return images;
     }
 
-    public void setImageUrls(List<RecipeImage> images) {
+    public void setImages(List<RecipeImage> images) {
         this.images = images;
     }
 
@@ -133,11 +125,11 @@ public class Recipe {
         this.tags = tags;
     }
 
-    public Period getPrepTime() {
+    public String getPrepTime() {
         return prepTime;
     }
 
-    public void setPrepTime(Period prepTime) {
+    public void setPrepTime(String prepTime) {
         this.prepTime = prepTime;
     }
 
