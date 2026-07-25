@@ -3,9 +3,12 @@ package com.example.granary.web;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
+import javax.naming.AuthenticationException;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -117,6 +120,16 @@ public class GlobalExceptionHandler {
         return buildError(HttpStatus.UNSUPPORTED_MEDIA_TYPE, message);
     }
 
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiError> handleBadCredentials(BadCredentialsException ex) {
+        // Don't reveal whether username or password was wrong
+        return buildError(HttpStatus.UNAUTHORIZED, "Invalid username or password");
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiError> handleAuthentication(AuthenticationException ex) {
+        return buildError(HttpStatus.UNAUTHORIZED, "Authentication failed");
+    }
 
     // 500 - Catch-all for anything unexpected
     @ExceptionHandler(Exception.class)
