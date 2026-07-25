@@ -34,7 +34,7 @@ public class RecipeService {
     private final RecipeImageRepository recipeImageRepository;
     private final ImageStorageService imageStorageService;
 
-    public RecipeResponseDto create(RecipeRequestDto dto) {
+    public RecipeResponseDto create(RecipeRequestDto dto){
         Recipe recipe = recipeMapper.toEntity(dto);
         recipe.setUser(currentUserService.getCurrentUser());
         Recipe saved = recipeRepository.save(recipe);

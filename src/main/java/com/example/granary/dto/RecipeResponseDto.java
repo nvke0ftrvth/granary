@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.example.granary.model.Ingredient;
 import com.example.granary.model.Step;
-import com.example.granary.model.User;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

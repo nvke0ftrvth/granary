@@ -80,9 +80,6 @@ class RecipeControllerTest extends BaseIntegrationTest {
                 authEntity(buildRecipeRequest("Chicken Stir Fry"), token),
                 RecipeResponseDto.class);
 
-        System.out.println("Status: " + response.getStatusCode());
-        System.out.println("Body: " + response.getBody());
-
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody().getId()).isNotNull();
         assertThat(response.getBody().getTitle()).isEqualTo("Chicken Stir Fry");
@@ -178,6 +175,7 @@ class RecipeControllerTest extends BaseIntegrationTest {
         ResponseEntity<ApiError> response = restTemplate.exchange(
                 baseUrl() + "/" + id, HttpMethod.DELETE,
                 authEntity(null, otherToken), ApiError.class);
+
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
