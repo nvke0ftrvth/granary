@@ -7,13 +7,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
+import com.example.granary.dto.AuthResponseDto;
 import com.example.granary.dto.RecipeRequestDto;
+import com.example.granary.dto.RegisterRequestDto;
 import com.example.granary.model.Ingredient;
 import com.example.granary.model.Step;
 import com.example.granary.repo.RecipeImageRepository;
 import com.example.granary.repo.RecipeRepository;
+import com.example.granary.repo.UserRepository;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestRestTemplate
@@ -29,11 +37,58 @@ public abstract class BaseIntegrationTest {
     @Autowired
     protected RecipeImageRepository recipeImageRepository;
 
+    @Autowired
+    protected UserRepository userRepository;
+
+
     @BeforeEach
     void clearDatabase() {
         recipeImageRepository.deleteAll();
         recipeRepository.deleteAll();
+        userRepository.deleteAll();
     }
+
+    protected String registerAndGetToken(String username) {
+        RegisterRequestDto request = new RegisterRequestDto();
+        request.setUsername(username);
+        request.setEmail(username + "@test.com");
+        request.setPassword("password123");
+
+        ResponseEntity<AuthResponseDto> response = restTemplate.postForEntity(
+                authUrl() + "/register", request, AuthResponseDto.class);
+
+        return response.getBody().getToken();
+    }
+
+
+    protected HttpHeaders authHeaders(String token) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return headers;
+    }
+
+    // Build a request entity with auth headers
+    protected <T> HttpEntity<T> authEntity(T body, String token) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // Temporary debug
+        System.out.println("Sending token: " + token);
+        System.out.println("Headers: " + headers);
+
+        return new HttpEntity<>(body, authHeaders(token));
+    }
+
+    protected abstract String baseUrl();
+
+    protected String authUrl() {
+        return "http://localhost:" + port + "/api/auth";
+    }
+
+    @LocalServerPort
+    protected int port;
 
     protected RecipeRequestDto buildRecipeRequest(String title) {
         Ingredient ingredient1 = new Ingredient();

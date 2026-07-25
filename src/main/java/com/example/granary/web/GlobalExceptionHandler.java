@@ -1,5 +1,6 @@
 package com.example.granary.web;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
@@ -131,13 +132,18 @@ public class GlobalExceptionHandler {
         return buildError(HttpStatus.UNAUTHORIZED, "Authentication failed");
     }
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException ex) {
+        return buildError(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+
     // 500 - Catch-all for anything unexpected
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGeneric(Exception ex) {
         // Log the real error server-side so you can still see it
         log.error("Unhandled exception: ", ex);
     return buildError(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
-}
+    }
 
 
     // Shared builder
