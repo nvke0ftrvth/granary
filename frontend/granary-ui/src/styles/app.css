@@ -146,8 +146,7 @@
 }
 
 .ingredient-list li {
-  display: grid;
-  grid-template-columns: 7rem 1fr;
+  display: flex;
   gap: 0.75rem;
   padding: 0.2rem 0;
   font-size: 0.9rem;
@@ -161,9 +160,8 @@
 .ing-amount {
   font-family: var(--font-data);
   color: var(--ink-soft);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  min-width: 5rem;
+  flex-shrink: 0;
 }
 
 .step-list {
@@ -175,26 +173,6 @@
   padding: 0.15rem 0;
   font-size: 0.92rem;
   line-height: 1.5;
-}
-
-.edit-btn {
-  position: absolute;
-  bottom: 1rem;
-  right: 1.25rem;
-  background: transparent;
-  border: 1px solid var(--line);
-  color: var(--ink-soft);
-  font-size: 0.75rem;
-  font-weight: 500;
-  padding: 0.35rem 0.85rem;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease;
-}
-
-.edit-btn:hover {
-  border-color: var(--rust);
-  color: var(--rust);
 }
 
 /* --- Form --- */
@@ -248,7 +226,7 @@ textarea:focus {
 
 .ingredient-row {
   display: grid;
-  grid-template-columns: 4.5rem 8rem 1fr auto;
+  grid-template-columns: 4.5rem 5.5rem 1fr auto;
   gap: 0.5rem;
   align-items: center;
 }
@@ -310,26 +288,6 @@ textarea:focus {
   margin: 0;
 }
 
-.form-actions {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-}
-
-.cancel-btn {
-  background: transparent;
-  border: none;
-  color: var(--ink-soft);
-  font-size: 0.85rem;
-  cursor: pointer;
-  padding: 0.5rem 0;
-}
-
-.cancel-btn:hover {
-  color: var(--ink);
-  text-decoration: underline;
-}
-
 .submit-btn {
   align-self: flex-start;
   background: var(--ink);
@@ -354,6 +312,6 @@ textarea:focus {
 
 @media (max-width: 480px) {
   .ingredient-row {
-    grid-template-columns: 3.5rem 6rem 1fr auto;
+    grid-template-columns: 3.5rem 4.5rem 1fr auto;
   }
 }

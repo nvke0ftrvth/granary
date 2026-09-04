@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: granary-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: granary
+      POSTGRES_USER: granary
+      POSTGRES_PASSWORD: granary_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - granary-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  granary-postgres-data:
