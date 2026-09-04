@@ -98,7 +98,7 @@ public class RecipeService {
     }
 
     private void assertOwnership(Recipe recipe, User currentUser) {
-        if (!recipe.getUser().getId().equals(currentUser.getId())) {
+        if (!recipe.getUser().getId().equals(currentUser.getId()) || !recipe.getUser().getId().equals(currentUser.getId())) {
             throw new AccessDeniedException(
                 "You do not have permission to modify this recipe"
             );
