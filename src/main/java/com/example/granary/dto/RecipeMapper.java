@@ -23,5 +23,6 @@ public interface RecipeMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "images", ignore = true)
     @Mapping(target = "updated", ignore = true)
+    @Mapping(target = "user", ignore = true)
     void updateEntityFromDto(RecipeRequestDto dto, @MappingTarget Recipe recipe);
 }

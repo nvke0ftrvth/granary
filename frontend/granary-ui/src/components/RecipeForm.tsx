@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useCreateRecipeMutation, useUpdateRecipeMutation } from '../store/recipeApi';
+import { ImagePanel } from './ImagePanel';
 import type { Ingredient, RecipeResponseDto } from '../types/recipe';
 
 const emptyIngredient: Ingredient = { name: '', measurement: '', quantity: undefined };
@@ -16,6 +17,7 @@ export function RecipeForm({ recipe, onSaved, onCancel }: RecipeFormProps) {
   const [title, setTitle] = useState(recipe?.title ?? '');
   const [description, setDescription] = useState(recipe?.description ?? '');
   const [tags, setTags] = useState(recipe?.tags?.join(', ') ?? '');
+  const [preptime, setPreptime] = useState(recipe?.prepTime ?? '');
   const [ingredients, setIngredients] = useState<Ingredient[]>(
     recipe?.ingredients?.length ? recipe.ingredients.map((ing) => ({ ...ing })) : [{ ...emptyIngredient }]
   );
@@ -29,6 +31,15 @@ export function RecipeForm({ recipe, onSaved, onCancel }: RecipeFormProps) {
   const [updateRecipe, updateState] = useUpdateRecipeMutation();
   const { isLoading, error } = isEditing ? updateState : createState;
 
+  // Grows a textarea to fit its content instead of scrolling internally.
+  // Used both on user input and via ref callback on mount, so pre-filled
+  // edit-mode content (e.g. a long existing step) starts at the right height too.
+  const autoResize = (el: HTMLTextAreaElement | null) => {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  };
+
   const updateIngredient = (index: number, patch: Partial<Ingredient>) => {
     setIngredients((prev) => prev.map((ing, i) => (i === index ? { ...ing, ...patch } : ing)));
   };
@@ -41,6 +52,7 @@ export function RecipeForm({ recipe, onSaved, onCancel }: RecipeFormProps) {
     setTitle('');
     setDescription('');
     setTags('');
+    setPreptime('');
     setIngredients([{ ...emptyIngredient }]);
     setSteps(['']);
   };
@@ -62,6 +74,7 @@ export function RecipeForm({ recipe, onSaved, onCancel }: RecipeFormProps) {
         .map((s) => s.trim())
         .filter(Boolean)
         .map((instruction, order) => ({ instruction, order })),
+      prepTime: preptime.trim() || undefined,
       tags: tags
         .split(',')
         .map((t) => t.trim())
@@ -96,10 +109,27 @@ export function RecipeForm({ recipe, onSaved, onCancel }: RecipeFormProps) {
       <label className="field">
         <span className="field-label">Description</span>
         <textarea
+          ref={autoResize}
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={(e) => {
+            setDescription(e.target.value);
+            autoResize(e.target);
+          }}
           placeholder="A few lines about where this recipe comes from"
           rows={3}
+        />
+      </label>
+
+      <label className="field">
+        <span className="field-label">Cooking Time (minutes)</span>
+        <input
+          className="recipe-preptime"
+          type="number"
+          min="1"
+          step="1"
+          placeholder="30"
+          value={preptime ?? ''}
+          onChange={(e) => setPreptime(e.target.value === '' ? '' : e.target.value)}
         />
       </label>
 
@@ -110,8 +140,8 @@ export function RecipeForm({ recipe, onSaved, onCancel }: RecipeFormProps) {
             <input
               className="ing-quantity"
               type="number"
-              min="1"
-              step="1"
+              min="0.01"
+              step="any"
               placeholder="qty"
               value={ing.quantity ?? ''}
               onChange={(e) => {
@@ -156,8 +186,12 @@ export function RecipeForm({ recipe, onSaved, onCancel }: RecipeFormProps) {
           <div className="step-row" key={i}>
             <span className="step-index">{i + 1}</span>
             <textarea
+              ref={autoResize}
               value={step}
-              onChange={(e) => updateStep(i, e.target.value)}
+              onChange={(e) => {
+                updateStep(i, e.target.value);
+                autoResize(e.target);
+              }}
               placeholder="What happens in this step"
               rows={2}
             />
@@ -175,6 +209,8 @@ export function RecipeForm({ recipe, onSaved, onCancel }: RecipeFormProps) {
           + Add step
         </button>
       </fieldset>
+
+      {isEditing && recipe && <ImagePanel recipeId={recipe.id} />}
 
       <label className="field">
         <span className="field-label">Tags</span>

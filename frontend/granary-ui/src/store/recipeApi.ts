@@ -31,6 +31,18 @@ export const recipeApi = createApi({
         { type: 'Recipe', id: 'LIST' },
       ],
     }),
+    uploadImages: builder.mutation<RecipeResponseDto, { id: number; files: File[] }>({
+      query: ({ id, files }) => {
+        const formData = new FormData();
+        files.forEach((file) => formData.append('files', file));
+        return { url: `/${id}/images`, method: 'POST', body: formData };
+      },
+      invalidatesTags: (_result, _error, { id }) => [{ type: 'Recipe', id }],
+    }),
+    deleteImage: builder.mutation<void, { recipeId: number; imageId: number }>({
+      query: ({ recipeId, imageId }) => ({ url: `/${recipeId}/images/${imageId}`, method: 'DELETE' }),
+      invalidatesTags: (_result, _error, { recipeId }) => [{ type: 'Recipe', id: recipeId }],
+    }),
   }),
 });
 
@@ -39,4 +51,6 @@ export const {
   useGetRecipeByIdQuery,
   useCreateRecipeMutation,
   useUpdateRecipeMutation,
+  useUploadImagesMutation,
+  useDeleteImageMutation,
 } = recipeApi;

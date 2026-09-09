@@ -1,5 +1,7 @@
 package com.example.granary.model;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Table;
@@ -20,8 +22,8 @@ public class Ingredient {
     @Column
     private String measurement;
 
-    @Column
-    private Integer quantity;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal quantity;
 
     public String getName() {
         return name;
@@ -39,11 +41,11 @@ public class Ingredient {
         this.measurement = measurement;
     }
 
-    public Integer getQuantity() {
+    public BigDecimal getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(Integer quantity) {
+    public void setQuantity(BigDecimal quantity) {
         this.quantity = quantity;
     }
 }

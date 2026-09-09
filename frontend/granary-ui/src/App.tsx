@@ -37,7 +37,7 @@ export default function App() {
             className={view === 'list' ? 'active' : ''}
             onClick={backToList}
           >
-            Recipe box
+            Recipes
           </button>
           <button
             role="tab"
