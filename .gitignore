@@ -35,3 +35,9 @@ build/
 ### Node/React ###
 frontend/node_modules/
 frontend/dist/
+
+src\main\resources\application-dev.properties
+src\test\resources\application-test.properties
+src\main\resources\application-prod.properties
+src\main\resources\application.properties
+docker-compose.yml
