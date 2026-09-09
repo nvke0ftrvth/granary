@@ -44,3 +44,7 @@ INSERT INTO recipe_tags (recipe_id, tag) VALUES
 (1, 'pasta'),
 (2, 'asian'),
 (2, 'quick');
+
+ALTER TABLE recipes ALTER COLUMN id RESTART WITH 5;
+ALTER TABLE recipe_image ALTER COLUMN id RESTART WITH 5;
+ALTER TABLE users ALTER COLUMN id RESTART WITH 3;

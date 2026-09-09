@@ -2,8 +2,16 @@ package com.example.granary.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Embeddable
+@Table(name = "recipe_steps")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Step {
 
     @Column(name = "instruction")

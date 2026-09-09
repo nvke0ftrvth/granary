@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.example.granary.model.Ingredient;
 import com.example.granary.model.Step;
-import com.example.granary.model.User;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,7 +23,7 @@ public class RecipeResponseDto {
     private List<RecipeImageDto> images;  // replaces single imageUrl
     private List<String> tags;
     private String prepTime;
-    private User user;
+    private String ownerUsername;
     private LocalDateTime updated;
 
 }

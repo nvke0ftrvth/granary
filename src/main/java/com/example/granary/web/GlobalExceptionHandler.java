@@ -3,9 +3,14 @@ package com.example.granary.web;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
+import javax.naming.AuthenticationException;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -15,6 +20,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
+import com.example.granary.exceptions.NotLoggedInException;
 import com.example.granary.exceptions.ResourceNotFoundException;
 
 import jakarta.validation.ConstraintViolationException;
@@ -117,14 +123,39 @@ public class GlobalExceptionHandler {
         return buildError(HttpStatus.UNSUPPORTED_MEDIA_TYPE, message);
     }
 
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiError> handleBadCredentials(BadCredentialsException ex) {
+        // Don't reveal whether username or password was wrong
+        return buildError(HttpStatus.UNAUTHORIZED, "Invalid username or password");
+    }
 
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiError> handleAuthentication(AuthenticationException ex) {
+        return buildError(HttpStatus.UNAUTHORIZED, "Authentication failed");
+    }
+
+    @ExceptionHandler(NotLoggedInException.class)
+    public ResponseEntity<ApiError> handleAccessDenied(NotLoggedInException ex) {
+        return buildError(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException ex) {
+        return buildError(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<ApiError> handleUsernameNotFound(UsernameNotFoundException ex) {
+        return buildError(HttpStatus.UNAUTHORIZED, "Authentication required");
+    }
+    
     // 500 - Catch-all for anything unexpected
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGeneric(Exception ex) {
         // Log the real error server-side so you can still see it
         log.error("Unhandled exception: ", ex);
     return buildError(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
-}
+    }
 
 
     // Shared builder

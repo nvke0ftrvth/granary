@@ -1,10 +1,12 @@
 package com.example.granary.business;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,6 +17,7 @@ import com.example.granary.exceptions.RecipeNotFoundException;
 import com.example.granary.exceptions.ResourceNotFoundException;
 import com.example.granary.model.Recipe;
 import com.example.granary.model.RecipeImage;
+import com.example.granary.model.User;
 import com.example.granary.repo.RecipeImageRepository;
 import com.example.granary.repo.RecipeRepository;
 
@@ -26,13 +29,19 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class RecipeService {
 
+    private static final int MAX_IMAGES_PER_RECIPE = 3;
+    private static final long MAX_IMAGE_SIZE_BYTES = 2L * 1024 * 1024; // 2MB
+
     private final RecipeRepository recipeRepository;
+    private final CurrentUserService currentUserService;
     private final RecipeMapper recipeMapper;
     private final RecipeImageRepository recipeImageRepository;
     private final ImageStorageService imageStorageService;
 
-    public RecipeResponseDto create(RecipeRequestDto dto) {
+    public RecipeResponseDto create(RecipeRequestDto dto){
         Recipe recipe = recipeMapper.toEntity(dto);
+        recipe.setUser(currentUserService.getCurrentUser());
+        recipe.setUpdated(LocalDateTime.now());
         Recipe saved = recipeRepository.save(recipe);
         log.info("Recipe with id " + saved.getId() + " created");
         return recipeMapper.toResponseDto(saved);
@@ -42,7 +51,7 @@ public class RecipeService {
         log.debug("Fetching recipe by id: {}", id);
         Recipe recipe = recipeRepository.findById(id)
                 .orElseThrow(() -> new RecipeNotFoundException(id));
-                
+
         log.info("Recipe with id " + recipe.getId() + " retrieved");
         return recipeMapper.toResponseDto(recipe);
     }
@@ -66,15 +75,20 @@ public class RecipeService {
     public RecipeResponseDto update(Long id, RecipeRequestDto dto) {
         Recipe existing = recipeRepository.findById(id)
                 .orElseThrow(() -> new RecipeNotFoundException(id));
+
+        assertOwnership(existing, currentUserService.getCurrentUser());
         recipeMapper.updateEntityFromDto(dto, existing); // updates in place
+        existing.setUpdated(LocalDateTime.now());
         log.info("Recipe with id " + id + " updated");
-    
+
         return recipeMapper.toResponseDto(recipeRepository.save(existing));
     }
 
     public void delete(Long id) {
-        recipeRepository.findById(id)
-                .orElseThrow(() -> new RecipeNotFoundException(id));
+        Recipe existing = recipeRepository.findById(id)
+            .orElseThrow(() -> new RecipeNotFoundException(id));
+
+        assertOwnership(existing, currentUserService.getCurrentUser());
         recipeRepository.deleteById(id);
         log.info("Recipe with id " + id + " deleted");
     }
@@ -89,11 +103,29 @@ public class RecipeService {
             .toList();
     }
 
+    private void assertOwnership(Recipe recipe, User currentUser) {
+        if (recipe.getUser() == null || !recipe.getUser().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException(
+                "You do not have permission to modify this recipe"
+            );
+        }
+    }
+
     public RecipeResponseDto uploadImages(Long id, List<MultipartFile> files) throws IllegalArgumentException {
         Recipe recipe = recipeRepository.findById(id)
                 .orElseThrow(() -> new RecipeNotFoundException(id));
 
-        int nextOrder = recipe.getImages().size(); // append after existing images
+        assertOwnership(recipe, currentUserService.getCurrentUser());
+
+        int existingCount = recipe.getImages().size();
+        if (existingCount + files.size() > MAX_IMAGES_PER_RECIPE) {
+            throw new IllegalArgumentException(
+                "A recipe can have at most " + MAX_IMAGES_PER_RECIPE + " images (currently has "
+                    + existingCount + ", tried to add " + files.size() + ")"
+            );
+        }
+
+        int nextOrder = existingCount; // append after existing images
 
         for (MultipartFile file : files) {
             validateImageFile(file);
@@ -116,6 +148,8 @@ public class RecipeService {
     public void deleteImage(Long recipeId, Long imageId) {
         Recipe recipe = recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new RecipeNotFoundException(recipeId));
+
+        assertOwnership(recipe, currentUserService.getCurrentUser());
 
         RecipeImage image = recipeImageRepository.findByIdAndRecipeId(imageId, recipeId)
             .orElseThrow(() -> new ResourceNotFoundException("Image", imageId));
@@ -145,7 +179,7 @@ public class RecipeService {
         return recipeMapper.toResponseDto(recipeRepository.save(recipe));
     }
 
-        private void validateImageFile(MultipartFile file) {
+    private void validateImageFile(MultipartFile file) {
 
         // Check file isn't empty
         if (file == null || file.isEmpty()) {
@@ -161,11 +195,10 @@ public class RecipeService {
             );
         }
 
-        // Check file size (8MB limit)
-        long maxSizeBytes = 8 * 1024 * 1024;
-        if (file.getSize() > maxSizeBytes) {
+        // Check file size (2MB limit)
+        if (file.getSize() > MAX_IMAGE_SIZE_BYTES) {
             throw new IllegalArgumentException(
-                "File size exceeds the 5MB limit"
+                "File size exceeds the 2MB limit"
             );
         }
 

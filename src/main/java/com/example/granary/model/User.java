@@ -1,7 +1,14 @@
 package com.example.granary.model;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,12 +17,16 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Data
 @Table(name = "users")
-public class User {
+@AllArgsConstructor
+@NoArgsConstructor
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,7 +39,11 @@ public class User {
     private String email;
 
     @Column
+    @JsonIgnore
     private String password;
+
+    @Column
+    private Role role;
 
     @OneToMany(mappedBy = "user")
     private List<Recipe> recipes = new ArrayList<>();
@@ -73,5 +88,10 @@ public class User {
 
     public void setRecipes(List<Recipe> recipes) {
         this.recipes = recipes;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
     }
 }
