@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: granary
       POSTGRES_USER: granary
-      POSTGRES_PASSWORD: granary_dev_password
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
