@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -44,17 +45,19 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-            .anyRequest().permitAll() // For test, to delete
-            //.requestMatchers(HttpMethod.GET, "/api/recipes/**").permitAll()
-            //.requestMatchers(HttpMethod.GET, "/api/recipes/search").permitAll()
-            //.requestMatchers("/images/**").permitAll()
-            //.requestMatchers("/api/auth/**").permitAll()
-            //.anyRequest().authenticated()
-                )
+                .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
+                // Order matters: this specific rule must come before the general
+                // GET /api/recipes/** permitAll below, or that broader rule would
+                // match first and let /mine through unauthenticated.
+                .requestMatchers(HttpMethod.GET, "/api/recipes/mine").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/recipes/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
+                .anyRequest().authenticated()
+            )
             .sessionManagement(session -> session
                     .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                        .exceptionHandling(ex -> ex
+            .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((request, response, authException) -> {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.setContentType("application/json");
@@ -73,7 +76,6 @@ public class SecurityConfig {
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-            ;
         return http.build();
     }
 

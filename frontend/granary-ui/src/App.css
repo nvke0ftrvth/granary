@@ -23,6 +23,45 @@
   letter-spacing: -0.01em;
 }
 
+.app-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.user-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.user-indicator-name {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+.logout-btn {
+  background: transparent;
+  border: none;
+  color: var(--rust);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+}
+
+.logout-btn:hover {
+  text-decoration: underline;
+}
+
+.profile-heading {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin: 0 0 1.25rem;
+}
+
 .view-toggle {
   display: flex;
   gap: 0.5rem;
@@ -152,6 +191,8 @@
   color: var(--ink-soft);
   font-size: 0.95rem;
   margin: 0.75rem 0 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .recipe-collapsible {
@@ -233,24 +274,16 @@
 }
 
 .ingredient-list li {
-  display: grid;
-  grid-template-columns: 7rem 1fr;
-  gap: 0.75rem;
   padding: 0.2rem 0;
   font-size: 0.9rem;
+  line-height: 1.5;
   border-bottom: 1px dotted var(--line);
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .ingredient-list li:last-child {
   border-bottom: none;
-}
-
-.ing-amount {
-  font-family: var(--font-data);
-  color: var(--ink-soft);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .step-list {
@@ -262,6 +295,8 @@
   padding: 0.15rem 0;
   font-size: 0.92rem;
   line-height: 1.5;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .edit-btn {
@@ -339,7 +374,7 @@ textarea:focus {
 
 .ingredient-row {
   display: grid;
-  grid-template-columns: 4.5rem 8rem 1fr auto;
+  grid-template-columns: 5.5rem 8rem 1fr auto;
   gap: 0.5rem;
   align-items: center;
 }
@@ -516,6 +551,39 @@ textarea:focus {
 
 @media (max-width: 480px) {
   .ingredient-row {
-    grid-template-columns: 3.5rem 6rem 1fr auto;
+    grid-template-columns: 4.5rem 6rem 1fr auto;
   }
+}
+
+.auth-form-wrapper {
+  max-width: 24rem;
+  margin: 2rem auto 0;
+}
+
+.auth-form {
+  background: var(--paper-dim);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 1.75rem;
+}
+
+.auth-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 1.25rem;
+}
+
+.auth-mode-toggle {
+  align-self: center;
+  background: transparent;
+  border: none;
+  color: var(--sage);
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0.3rem 0;
+}
+
+.auth-mode-toggle:hover {
+  text-decoration: underline;
 }

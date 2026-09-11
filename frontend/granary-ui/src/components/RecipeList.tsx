@@ -4,9 +4,10 @@ import type { RecipeResponseDto } from '../types/recipe';
 
 interface RecipeListProps {
   onEdit?: (recipe: RecipeResponseDto) => void;
+  currentUsername?: string | null;
 }
 
-export function RecipeList({ onEdit }: RecipeListProps) {
+export function RecipeList({ onEdit, currentUsername }: RecipeListProps) {
   const { data: recipes, isLoading, error } = useGetRecipesQuery();
 
   if (isLoading) return <p className="status-message">Loading recipes…</p>;
@@ -20,7 +21,12 @@ export function RecipeList({ onEdit }: RecipeListProps) {
   return (
     <div className="recipe-list">
       {recipes.map((recipe) => (
-        <RecipeCard key={recipe.id} recipe={recipe} onEdit={onEdit} />
+        <RecipeCard
+          key={recipe.id}
+          recipe={recipe}
+          onEdit={onEdit}
+          isOwner={currentUsername != null && currentUsername === recipe.ownerUsername}
+        />
       ))}
     </div>
   );

@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.granary.dto.RecipeMapper;
@@ -15,9 +16,13 @@ import com.example.granary.dto.RecipeRequestDto;
 import com.example.granary.dto.RecipeResponseDto;
 import com.example.granary.exceptions.RecipeNotFoundException;
 import com.example.granary.exceptions.ResourceNotFoundException;
+import com.example.granary.model.Comment;
 import com.example.granary.model.Recipe;
 import com.example.granary.model.RecipeImage;
 import com.example.granary.model.User;
+import com.example.granary.repo.BookmarkRepository;
+import com.example.granary.repo.CommentRepository;
+import com.example.granary.repo.CommentVoteRepository;
 import com.example.granary.repo.RecipeImageRepository;
 import com.example.granary.repo.RecipeRepository;
 
@@ -37,6 +42,9 @@ public class RecipeService {
     private final RecipeMapper recipeMapper;
     private final RecipeImageRepository recipeImageRepository;
     private final ImageStorageService imageStorageService;
+    private final CommentRepository commentRepository;
+    private final CommentVoteRepository commentVoteRepository;
+    private final BookmarkRepository bookmarkRepository;
 
     public RecipeResponseDto create(RecipeRequestDto dto){
         Recipe recipe = recipeMapper.toEntity(dto);
@@ -72,6 +80,15 @@ public class RecipeService {
             .toList();
     }
 
+    public List<RecipeResponseDto> getMine() {
+        String username = currentUserService.getCurrentUser().getUsername();
+        log.debug("Fetching recipes owned by: {}", username);
+        return recipeRepository.findByUserUsername(username)
+                .stream()
+                .map(recipeMapper::toResponseDto)
+                .toList();
+    }
+
     public RecipeResponseDto update(Long id, RecipeRequestDto dto) {
         Recipe existing = recipeRepository.findById(id)
                 .orElseThrow(() -> new RecipeNotFoundException(id));
@@ -84,14 +101,32 @@ public class RecipeService {
         return recipeMapper.toResponseDto(recipeRepository.save(existing));
     }
 
+
+    // @Transactional: this now does several related deletes (votes, comments,
+    // bookmarks, then the recipe) that need to succeed or fail together --
+    // without it, a failure partway through could leave orphaned rows behind.
+    @Transactional
     public void delete(Long id) {
         Recipe existing = recipeRepository.findById(id)
             .orElseThrow(() -> new RecipeNotFoundException(id));
 
         assertOwnership(existing, currentUserService.getCurrentUser());
+
+        // Comments and bookmarks aren't wired to Recipe via JPA cascade, so they
+        // have to be cleaned up manually here first -- otherwise deleting a
+        // recipe that has either would throw an FK-violation 500.
+        List<Comment> comments = commentRepository.findByRecipeIdOrderByCreatedAtAsc(id);
+        if (!comments.isEmpty()) {
+            List<Long> commentIds = comments.stream().map(Comment::getId).toList();
+            commentVoteRepository.deleteByCommentIdIn(commentIds);
+            commentRepository.deleteAll(comments);
+        }
+        bookmarkRepository.deleteByRecipeId(id);
+
         recipeRepository.deleteById(id);
         log.info("Recipe with id " + id + " deleted");
     }
+
 
     @Query("SELECT r FROM Recipe r WHERE " +
        "LOWER(r.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
@@ -164,11 +199,9 @@ public class RecipeService {
         Recipe recipe = recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new RecipeNotFoundException(recipeId));
 
-        // Build a lookup map for quick access
         Map<Long, RecipeImage> imageMap = recipe.getImages().stream()
                 .collect(Collectors.toMap(RecipeImage::getId, i -> i));
 
-        // Apply the new order based on position in the list
         for (int i = 0; i < imageIds.size(); i++) {
             RecipeImage image = imageMap.get(imageIds.get(i));
             if (image != null) {
@@ -181,12 +214,10 @@ public class RecipeService {
 
     private void validateImageFile(MultipartFile file) {
 
-        // Check file isn't empty
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Image file cannot be empty");
         }
 
-        // Check MIME type
         String contentType = file.getContentType();
         List<String> allowedTypes = List.of("image/jpeg", "image/png", "image/webp", "image/gif");
         if (contentType == null || !allowedTypes.contains(contentType)) {
@@ -195,14 +226,12 @@ public class RecipeService {
             );
         }
 
-        // Check file size (2MB limit)
         if (file.getSize() > MAX_IMAGE_SIZE_BYTES) {
             throw new IllegalArgumentException(
                 "File size exceeds the 2MB limit"
             );
         }
 
-        // Check file extension matches the MIME type (prevents extension spoofing)
         String originalFilename = file.getOriginalFilename();
         if (originalFilename == null || originalFilename.isBlank()) {
             throw new IllegalArgumentException("File must have a valid name");
@@ -219,7 +248,6 @@ public class RecipeService {
             "image/gif",  "gif"
         );
 
-        // Also allow .jpeg as a valid extension for image/jpeg
         boolean extensionValid = extension.equals(allowedExtensions.get(contentType))
                 || (contentType.equals("image/jpeg") && extension.equals("jpeg"));
 
