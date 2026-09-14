@@ -600,6 +600,22 @@ textarea:focus {
   font-size: 0.78rem;
 }
 
+.comment-section-toggle {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  border-radius: 3px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.comment-section-toggle:hover {
+  border-color: var(--sage);
+  color: var(--sage);
+}
+
 .comment-author {
   font-weight: 600;
   color: var(--ink);

@@ -39,7 +39,7 @@ export function BookmarkButton({ recipeId }: BookmarkButtonProps) {
       aria-pressed={isBookmarked}
       aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark this recipe'}
     >
-      {isBookmarked ? '★ Bookmarked' : '☆ Bookmark'}
+      {isBookmarked ? '★' : '☆'}
     </button>
   );
 }
