@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.granary.dto.RecipeMapper;
 import com.example.granary.dto.RecipeResponseDto;
@@ -55,6 +56,7 @@ public class BookmarkService {
     }
 
     // Also idempotent -- removing a bookmark that doesn't exist is a no-op.
+    @Transactional
     public void removeBookmark(Long recipeId) {
         User currentUser = currentUserService.getCurrentUser();
         bookmarkRepository.deleteByUserIdAndRecipeId(currentUser.getId(), recipeId);

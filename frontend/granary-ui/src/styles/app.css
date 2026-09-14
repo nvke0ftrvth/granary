@@ -97,6 +97,42 @@
   margin-top: 0.5rem;
 }
 
+.recipe-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.bookmark-btn {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.bookmark-btn:hover:not(:disabled) {
+  border-color: var(--rust);
+  color: var(--rust);
+}
+
+.bookmark-btn.bookmarked {
+  background: var(--rust);
+  border-color: var(--rust);
+  color: var(--paper);
+}
+
+.bookmark-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .recipe-card h3 {
   font-family: var(--font-display);
   font-size: 1.4rem;
@@ -508,6 +544,157 @@ textarea:focus {
 .submit-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* --- Profile tabs --- */
+
+.profile-tabs {
+  margin: 0 0 1.5rem;
+}
+
+/* --- Comments --- */
+
+.comment-section {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px dashed var(--line);
+}
+
+.comment-new-form,
+.comment-reply-form,
+.comment-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+
+.comment-new-form textarea,
+.comment-reply-form textarea,
+.comment-edit-form textarea {
+  min-height: 3.5rem;
+}
+
+.comment-form-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.comment {
+  border-left: 2px solid var(--line);
+  padding-left: 0.9rem;
+}
+
+.comment-meta {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  font-size: 0.78rem;
+}
+
+.comment-author {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.comment-date {
+  color: var(--ink-soft);
+  font-family: var(--font-data);
+}
+
+.comment-content {
+  margin: 0.35rem 0;
+  font-size: 0.92rem;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.comment-content.comment-deleted {
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.comment-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-top: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.comment-votes {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.vote-btn {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  border-radius: 3px;
+  width: 1.6rem;
+  height: 1.6rem;
+  line-height: 1;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.vote-btn:hover:not(:disabled) {
+  border-color: var(--sage);
+  color: var(--sage);
+}
+
+.vote-btn.active {
+  background: var(--sage);
+  border-color: var(--sage);
+  color: var(--paper);
+}
+
+.vote-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.vote-score {
+  font-family: var(--font-data);
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  min-width: 1.2rem;
+  text-align: center;
+}
+
+.comment-link-btn {
+  background: transparent;
+  border: none;
+  color: var(--sage);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+}
+
+.comment-link-btn:hover {
+  text-decoration: underline;
+}
+
+.comment-delete-btn {
+  color: var(--rust);
+}
+
+.comment-replies {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 @media (max-width: 480px) {
