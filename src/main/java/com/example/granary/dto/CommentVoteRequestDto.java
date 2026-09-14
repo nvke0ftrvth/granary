@@ -1,5 +1,6 @@
 package com.example.granary.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,7 +8,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthResponseDto {
-    private String token;
-    private String username;
+public class CommentVoteRequestDto {
+
+    @NotNull(message = "Vote value is required")
+    private Integer value;
 }

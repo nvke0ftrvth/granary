@@ -3,6 +3,7 @@ package com.example.granary.web;
 import java.net.URI;
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,7 +18,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.example.granary.business.BookmarkService;
+import com.example.granary.business.CommentService;
 import com.example.granary.business.RecipeService;
+import com.example.granary.dto.CommentRequestDto;
+import com.example.granary.dto.CommentResponseDto;
 import com.example.granary.dto.RecipeRequestDto;
 import com.example.granary.dto.RecipeResponseDto;
 
@@ -31,12 +36,22 @@ import lombok.RequiredArgsConstructor;
 public class RecipeController {
 
     private final RecipeService recipeService;
+    private final CommentService commentService;
+    private final BookmarkService bookmarkService;
 
 
     // GET all recipes
     @GetMapping
     public ResponseEntity<List<RecipeResponseDto>> getAllRecipes() {
         return ResponseEntity.ok(recipeService.getAll());
+    }
+
+
+    // GET recipes owned by the currently logged-in user (profile page)
+    // Requires auth -- enforced in SecurityConfig, not here
+    @GetMapping("/mine")
+    public ResponseEntity<List<RecipeResponseDto>> getMyRecipes() {
+        return ResponseEntity.ok(recipeService.getMine());
     }
 
 
@@ -62,7 +77,6 @@ public class RecipeController {
 
 
     // POST create a new recipe
-
     @PostMapping
     public ResponseEntity<RecipeResponseDto> createRecipe(@Valid @RequestBody RecipeRequestDto dto) {
         RecipeResponseDto created = recipeService.create(dto);
@@ -84,7 +98,7 @@ public class RecipeController {
     }
 
 
-    // DELETE a recipe
+    // DELETE a recipe (also cascades to its comments/votes/bookmarks -- see RecipeService.delete())
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRecipe(@PathVariable Long id) {
         recipeService.delete(id);
@@ -114,5 +128,36 @@ public class RecipeController {
             @PathVariable Long id,
             @RequestBody List<Long> imageIds) {  // ordered list of image IDs
         return ResponseEntity.ok(recipeService.reorderImages(id, imageIds));
+    }
+
+
+    // GET this recipe's full comment tree (public -- covered by the class-level GET permitAll rule)
+    @GetMapping("/{id}/comments")
+    public ResponseEntity<List<CommentResponseDto>> getComments(@PathVariable Long id) {
+        return ResponseEntity.ok(commentService.getByRecipe(id));
+    }
+
+    // POST a new top-level comment or reply on this recipe (requires auth)
+    @PostMapping("/{id}/comments")
+    public ResponseEntity<CommentResponseDto> createComment(
+            @PathVariable Long id,
+            @Valid @RequestBody CommentRequestDto dto) {
+        CommentResponseDto created = commentService.create(id, dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+
+    // POST bookmark this recipe (requires auth, idempotent -- see BookmarkService.addBookmark())
+    @PostMapping("/{id}/bookmark")
+    public ResponseEntity<Void> bookmarkRecipe(@PathVariable Long id) {
+        bookmarkService.addBookmark(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // DELETE remove this recipe from your bookmarks (requires auth, idempotent)
+    @DeleteMapping("/{id}/bookmark")
+    public ResponseEntity<Void> unbookmarkRecipe(@PathVariable Long id) {
+        bookmarkService.removeBookmark(id);
+        return ResponseEntity.noContent().build();
     }
 }

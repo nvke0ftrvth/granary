@@ -1,5 +1,6 @@
 package com.example.granary;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -93,12 +94,12 @@ public abstract class BaseIntegrationTest {
     protected RecipeRequestDto buildRecipeRequest(String title) {
         Ingredient ingredient1 = new Ingredient();
         ingredient1.setName("Ingredient 1");
-        ingredient1.setQuantity(1);
+        ingredient1.setQuantity(BigDecimal.valueOf(1.0));
         ingredient1.setMeasurement("gram");
 
         Ingredient ingredient2 = new Ingredient();
         ingredient2.setName("Ingredient 2");
-        ingredient2.setQuantity(2);
+        ingredient2.setQuantity(BigDecimal.valueOf(2.0));
         ingredient2.setMeasurement("kilogram");
 
         RecipeRequestDto dto = new RecipeRequestDto();

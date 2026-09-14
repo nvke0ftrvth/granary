@@ -4,9 +4,10 @@ import { format } from 'date-fns';
 interface RecipeCardProps {
   recipe: RecipeResponseDto;
   onEdit?: (recipe: RecipeResponseDto) => void;
+  isOwner?: boolean;
 }
 
-export function RecipeCard({ recipe, onEdit }: RecipeCardProps) {
+export function RecipeCard({ recipe, onEdit, isOwner }: RecipeCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -93,7 +94,7 @@ export function RecipeCard({ recipe, onEdit }: RecipeCardProps) {
         </button>
       )}
 
-      {onEdit && expanded && (
+      {onEdit && isOwner && expanded && (
         <button
           className="edit-btn"
           onClick={(e) => {
