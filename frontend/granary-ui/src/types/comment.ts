@@ -15,6 +15,7 @@ export interface CommentResponseDto {
   content: string;
   authorUsername: string;
   recipeId: number;
+  recipeTitle: string;
   parentId?: number | null;
   deleted: boolean;
   score: number;

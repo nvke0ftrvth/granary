@@ -31,9 +31,6 @@ export function RecipeForm({ recipe, onSaved, onCancel }: RecipeFormProps) {
   const [updateRecipe, updateState] = useUpdateRecipeMutation();
   const { isLoading, error } = isEditing ? updateState : createState;
 
-  // Grows a textarea to fit its content instead of scrolling internally.
-  // Used both on user input and via ref callback on mount, so pre-filled
-  // edit-mode content (e.g. a long existing step) starts at the right height too.
   const autoResize = (el: HTMLTextAreaElement | null) => {
     if (!el) return;
     el.style.height = 'auto';

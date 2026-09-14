@@ -1,7 +1,10 @@
 package com.example.granary.web;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,6 +26,11 @@ import lombok.RequiredArgsConstructor;
 public class CommentController {
 
     private final CommentService commentService;
+
+    @GetMapping("/mine")
+    public ResponseEntity<List<CommentResponseDto>> getMyComments() {
+        return ResponseEntity.ok(commentService.getMine());
+    }
 
     // Requires auth + ownership (enforced in CommentService)
     @PutMapping("/{id}")

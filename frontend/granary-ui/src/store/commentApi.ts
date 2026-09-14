@@ -20,6 +20,10 @@ export const commentApi = createApi({
       query: (recipeId) => `recipes/${recipeId}/comments`,
       providesTags: (_result, _error, recipeId) => [{ type: 'Comment', id: `RECIPE_${recipeId}` }],
     }),
+    getMyComments: builder.query<CommentResponseDto[], void>({
+      query: () => 'comments/mine',
+      providesTags: [{ type: 'Comment', id: 'MINE' }],
+    }),
     createComment: builder.mutation<CommentResponseDto, { recipeId: number; body: CommentRequestDto }>({
       query: ({ recipeId, body }) => ({ url: `recipes/${recipeId}/comments`, method: 'POST', body }),
       invalidatesTags: (_result, _error, { recipeId }) => [{ type: 'Comment', id: `RECIPE_${recipeId}` }],
@@ -48,6 +52,7 @@ export const commentApi = createApi({
 
 export const {
   useGetCommentsQuery,
+  useGetMyCommentsQuery,
   useCreateCommentMutation,
   useUpdateCommentMutation,
   useDeleteCommentMutation,

@@ -14,8 +14,6 @@ export function ImagePanel({ recipeId }: ImagePanelProps) {
   const [localError, setLocalError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Live subscription, not a static prop -- so it reflects new/removed
-  // photos immediately after the mutations below invalidate this recipe's cache tag.
   const { data: recipe } = useGetRecipeByIdQuery(recipeId);
   const images = recipe?.images ?? [];
 

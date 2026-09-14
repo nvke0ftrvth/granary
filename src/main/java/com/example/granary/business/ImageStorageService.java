@@ -21,20 +21,16 @@ public class ImageStorageService {
 
     public String store(MultipartFile file) {
         try {
-            // Create the upload directory if it doesn't exist
+
             Path uploadPath = Paths.get(uploadDir);
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
             }
 
-            // Give the file a unique name to avoid collisions. Only the final path
-            // segment is kept (not just cleanPath()) so a traversal sequence like
-            // "../../etc/passwd" can't escape the upload directory.
             String cleanedName = StringUtils.cleanPath(file.getOriginalFilename());
             String baseName = Paths.get(cleanedName).getFileName().toString();
             String filename = UUID.randomUUID() + "_" + baseName;
 
-            // Save the file
             Path filePath = uploadPath.resolve(filename);
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
