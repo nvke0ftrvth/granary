@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import type { RecipeResponseDto } from '../types/recipe';
 import { format } from 'date-fns';
+import { BookmarkButton } from './BookmarkButton';
+import { CommentSection } from './CommentSection';
 interface RecipeCardProps {
   recipe: RecipeResponseDto;
   onEdit?: (recipe: RecipeResponseDto) => void;
@@ -15,7 +17,10 @@ export function RecipeCard({ recipe, onEdit, isOwner }: RecipeCardProps) {
       <div className="recipe-card-perforation" aria-hidden="true" />
 
       <header className="recipe-card-header">
-        <h3>{recipe.title}</h3>
+        <div className="recipe-title-group">
+          <h3>{recipe.title}</h3>
+          <BookmarkButton recipeId={recipe.id} />
+        </div>
         <div className="recipe-header-right">
           {recipe.tags && recipe.tags.length > 0 && (
             <ul className="recipe-tags">
@@ -93,6 +98,8 @@ export function RecipeCard({ recipe, onEdit, isOwner }: RecipeCardProps) {
           Show less ↑
         </button>
       )}
+
+      {expanded && <CommentSection recipeId={recipe.id} />}
 
       {onEdit && isOwner && expanded && (
         <button

@@ -188,6 +188,7 @@ public class CommentService {
         return toDto(comment, score, myVote, List.of());
     }
 
+    @Transactional
     public void removeVote(Long commentId) {
         User currentUser = currentUserService.getCurrentUser();
         commentVoteRepository.deleteByCommentIdAndUserId(commentId, currentUser.getId());

@@ -41,7 +41,6 @@ public class Comment {
     @ToString.Exclude
     private Recipe recipe;
 
-    @Column(nullable = false)
     private Integer rating;
 
     @ManyToOne(fetch = FetchType.LAZY)
