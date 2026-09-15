@@ -26,10 +26,10 @@ public class RecipeImage {
 
     private String imageUrl;
     private String filename;
-    private Integer displayOrder;  // so you can control which image shows first
+    private Integer displayOrder; 
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recipe_id")
-    @ToString.Exclude  // avoid Lombok circular reference
+    @ToString.Exclude  
     private Recipe recipe;
 }
