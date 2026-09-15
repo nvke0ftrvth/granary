@@ -49,7 +49,7 @@ public class AuthService {
         );
 
         User user = userRepository.findByUsername(dto.getUsername())
-                .orElseThrow(); // unreachable if authenticate() succeeded above
+                .orElseThrow(); 
 
         String token = jwtService.generateToken(user);
         log.info("User logged in: {}", user.getUsername());

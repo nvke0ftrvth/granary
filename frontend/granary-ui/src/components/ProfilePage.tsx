@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useGetMyRecipesQuery } from '../store/recipeApi';
 import { useGetMyBookmarksQuery } from '../store/bookmarkApi';
+import { useGetMyCommentsQuery } from '../store/commentApi';
 import { RecipeCard } from './RecipeCard';
+import { MyComments } from './MyComments';
 import type { RootState } from '../store';
 import type { RecipeResponseDto } from '../types/recipe';
 
@@ -10,7 +12,7 @@ interface ProfilePageProps {
   onEdit?: (recipe: RecipeResponseDto) => void;
 }
 
-type ProfileTab = 'recipes' | 'bookmarks';
+type ProfileTab = 'recipes' | 'bookmarks' | 'comments';
 
 export function ProfilePage({ onEdit }: ProfilePageProps) {
   const username = useSelector((state: RootState) => state.auth.username);
@@ -22,10 +24,15 @@ export function ProfilePage({ onEdit }: ProfilePageProps) {
     isLoading: bookmarksLoading,
     error: bookmarksError,
   } = useGetMyBookmarksQuery();
+  const {
+    data: comments,
+    isLoading: commentsLoading,
+    error: commentsError,
+  } = useGetMyCommentsQuery();
 
-  const activeRecipes = tab === 'recipes' ? recipes : bookmarks;
-  const isLoading = tab === 'recipes' ? recipesLoading : bookmarksLoading;
-  const error = tab === 'recipes' ? recipesError : bookmarksError;
+  const activeRecipes = tab === 'recipes' ? recipes : tab === 'bookmarks' ? bookmarks : undefined;
+  const isLoading = tab === 'recipes' ? recipesLoading : tab === 'bookmarks' ? bookmarksLoading : commentsLoading;
+  const error = tab === 'recipes' ? recipesError : tab === 'bookmarks' ? bookmarksError : commentsError;
 
   return (
     <div>
@@ -48,17 +55,27 @@ export function ProfilePage({ onEdit }: ProfilePageProps) {
         >
           Bookmarks
         </button>
+        <button
+          role="tab"
+          aria-selected={tab === 'comments'}
+          className={tab === 'comments' ? 'active' : ''}
+          onClick={() => setTab('comments')}
+        >
+          My comments
+        </button>
       </nav>
 
       {isLoading && <p className="status-message">Loading…</p>}
 
       {error && (
         <p className="status-message form-error">
-          Couldn't load {tab === 'recipes' ? 'your recipes' : 'your bookmarks'}.
+          Couldn't load your {tab === 'recipes' ? 'recipes' : tab === 'bookmarks' ? 'bookmarks' : 'comments'}.
         </p>
       )}
 
-      {!isLoading && !error && (!activeRecipes || activeRecipes.length === 0) && (
+      {!isLoading && !error && tab === 'comments' && <MyComments comments={comments ?? []} />}
+
+      {!isLoading && !error && tab !== 'comments' && (!activeRecipes || activeRecipes.length === 0) && (
         <p className="status-message">
           {tab === 'recipes'
             ? "You haven't written any recipes yet."
@@ -66,7 +83,7 @@ export function ProfilePage({ onEdit }: ProfilePageProps) {
         </p>
       )}
 
-      {!isLoading && !error && activeRecipes && activeRecipes.length > 0 && (
+      {!isLoading && !error && tab !== 'comments' && activeRecipes && activeRecipes.length > 0 && (
         <div className="recipe-list">
           {activeRecipes.map((recipe) => (
             <RecipeCard

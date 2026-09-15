@@ -35,8 +35,6 @@ public class BookmarkService {
                 .toList();
     }
 
-    // Idempotent -- bookmarking something already bookmarked is a no-op,
-    // not an error, since the client doesn't need to track prior state to call this safely.
     public void addBookmark(Long recipeId) {
         User currentUser = currentUserService.getCurrentUser();
         Recipe recipe = recipeRepository.findById(recipeId)
@@ -55,7 +53,6 @@ public class BookmarkService {
         log.info("User {} bookmarked recipe {}", currentUser.getUsername(), recipeId);
     }
 
-    // Also idempotent -- removing a bookmark that doesn't exist is a no-op.
     @Transactional
     public void removeBookmark(Long recipeId) {
         User currentUser = currentUserService.getCurrentUser();

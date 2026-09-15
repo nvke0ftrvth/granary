@@ -126,7 +126,7 @@ public class RecipeController {
     @PutMapping("/{id}/images/order")
     public ResponseEntity<RecipeResponseDto> reorderImages(
             @PathVariable Long id,
-            @RequestBody List<Long> imageIds) {  // ordered list of image IDs
+            @RequestBody List<Long> imageIds) {  
         return ResponseEntity.ok(recipeService.reorderImages(id, imageIds));
     }
 

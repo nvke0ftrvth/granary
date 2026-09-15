@@ -3,6 +3,7 @@ import { recipeApi } from './recipeApi';
 import { authApi } from './authApi';
 import { bookmarkApi } from './bookmarkApi';
 import { commentApi } from './commentApi';
+import { userApi } from './userApi';
 import authReducer from './authSlice';
 
 export const store = configureStore({
@@ -11,6 +12,7 @@ export const store = configureStore({
     [authApi.reducerPath]: authApi.reducer,
     [bookmarkApi.reducerPath]: bookmarkApi.reducer,
     [commentApi.reducerPath]: commentApi.reducer,
+    [userApi.reducerPath]: userApi.reducer,
     auth: authReducer,
   },
   middleware: (getDefaultMiddleware) =>
@@ -18,7 +20,8 @@ export const store = configureStore({
       recipeApi.middleware,
       authApi.middleware,
       bookmarkApi.middleware,
-      commentApi.middleware
+      commentApi.middleware,
+      userApi.middleware
     ),
 });
 

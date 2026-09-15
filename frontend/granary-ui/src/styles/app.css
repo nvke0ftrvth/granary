@@ -28,7 +28,8 @@
   gap: 0.5rem;
 }
 
-.view-toggle button {
+.view-toggle button,
+.view-toggle a {
   border: 1px solid var(--line);
   background: transparent;
   color: var(--ink-soft);
@@ -36,15 +37,18 @@
   border-radius: 4px;
   font-size: 0.85rem;
   cursor: pointer;
+  text-decoration: none;
   transition: border-color 0.15s ease, color 0.15s ease;
 }
 
-.view-toggle button:hover {
+.view-toggle button:hover,
+.view-toggle a:hover {
   border-color: var(--sage);
   color: var(--ink);
 }
 
-.view-toggle button.active {
+.view-toggle button.active,
+.view-toggle a.active {
   background: var(--ink);
   border-color: var(--ink);
   color: var(--paper);

@@ -8,4 +8,5 @@ import com.example.granary.model.Comment;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
     List<Comment> findByRecipeIdOrderByCreatedAtAsc(Long recipeId);
+    List<Comment> findByUserUsernameAndDeletedFalseOrderByCreatedAtDesc(String username);
 }

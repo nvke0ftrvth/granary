@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import type { RecipeResponseDto } from '../types/recipe';
 import { format } from 'date-fns';
 import { BookmarkButton } from './BookmarkButton';
@@ -32,7 +33,11 @@ export function RecipeCard({ recipe, onEdit, isOwner }: RecipeCardProps) {
           {recipe.prepTime && <p className="recipe-preptime">Prep time: {recipe.prepTime} min</p>}
         </div>
       </header>
-      {recipe.ownerUsername && <p className="recipe-createdBy">Created by: {recipe.ownerUsername}</p>}
+      {recipe.ownerUsername && (
+        <p className="recipe-createdBy">
+          Created by: <Link to={`/users/${recipe.ownerUsername}`}>{recipe.ownerUsername}</Link>
+        </p>
+      )}
       {recipe.updated && (
         <p className="recipe-date">Last updated: {format(new Date(recipe.updated),'yyyy/MM/dd HH:mm:ss')}</p>)}
 
