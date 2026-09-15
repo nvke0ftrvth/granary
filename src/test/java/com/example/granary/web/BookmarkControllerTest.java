@@ -67,10 +67,7 @@ class BookmarkControllerTest {
 
     @Test
     void getMyBookmarks_notLoggedIn_returns401() throws Exception {
-        // Real enforcement of "GET /api/bookmarks requires auth" lives in
-        // SecurityConfig (bypassed here by addFilters = false); this only
-        // covers what GlobalExceptionHandler does if the service is reached
-        // without a logged-in user anyway.
+
         when(bookmarkService.getMyBookmarks())
                 .thenThrow(new NotLoggedInException("You must be logged in to perform this action"));
 

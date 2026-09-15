@@ -26,12 +26,6 @@ import com.example.granary.repo.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Opt-in test-data fixture: 10 users, 15 recipes, comments with replies and
- * votes, and bookmarks. Only runs under the "seed-test-data" profile, e.g.
- * {@code SPRING_PROFILES_ACTIVE=dev,seed-test-data}. All seeded users share
- * the password "TestPass123!".
- */
 @Slf4j
 @Component
 @Profile("seed-test-data")
