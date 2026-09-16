@@ -63,6 +63,19 @@
 
 /* --- Recipe list / cards --- */
 
+.back-link {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
 .recipe-list {
   display: grid;
   gap: 1.75rem;
@@ -137,11 +150,53 @@
   cursor: not-allowed;
 }
 
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.share-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex-shrink: 0;
+}
+
+.share-btn:hover {
+  border-color: var(--sage);
+  color: var(--sage);
+}
+
+.share-btn.copied {
+  background: var(--sage);
+  border-color: var(--sage);
+  color: var(--paper);
+}
+
 .recipe-card h3 {
   font-family: var(--font-display);
   font-size: 1.4rem;
   font-weight: 600;
   margin: 0;
+}
+
+.recipe-title-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.recipe-title-link:hover {
+  text-decoration: underline;
 }
 
 .recipe-card h4 {

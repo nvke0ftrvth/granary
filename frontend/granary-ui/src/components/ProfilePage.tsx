@@ -91,6 +91,7 @@ export function ProfilePage({ onEdit }: ProfilePageProps) {
               recipe={recipe}
               onEdit={onEdit}
               isOwner={username != null && username === recipe.ownerUsername}
+              linkTitle
             />
           ))}
         </div>

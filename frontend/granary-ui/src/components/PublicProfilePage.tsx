@@ -36,7 +36,7 @@ export function PublicProfilePage() {
       {!recipesLoading && !recipesError && recipes && recipes.length > 0 && (
         <div className="recipe-list">
           {recipes.map((recipe) => (
-            <RecipeCard key={recipe.id} recipe={recipe} isOwner={false} />
+            <RecipeCard key={recipe.id} recipe={recipe} isOwner={false} linkTitle />
           ))}
         </div>
       )}
