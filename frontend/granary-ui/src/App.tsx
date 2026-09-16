@@ -2,6 +2,8 @@ import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-r
 import { useDispatch, useSelector } from 'react-redux';
 import { RecipeForm } from './components/RecipeForm';
 import { RecipeList } from './components/RecipeList';
+import { RecipeFocusPage } from './components/RecipeFocusPage';
+import { PopularSidebar } from './components/PopularSidebar';
 import { ProfilePage } from './components/ProfilePage';
 import { PublicProfilePage } from './components/PublicProfilePage';
 import { AuthForm } from './components/AuthForm';
@@ -11,6 +13,20 @@ import type { RootState } from './store';
 import type { RecipeResponseDto } from './types/recipe';
 import './styles/tokens.css';
 import './styles/app.css';
+
+interface HomePageProps {
+  onEdit: (recipe: RecipeResponseDto) => void;
+  currentUsername?: string | null;
+}
+
+function HomePage({ onEdit, currentUsername }: HomePageProps) {
+  return (
+    <div className="home-layout">
+      <RecipeList onEdit={onEdit} currentUsername={currentUsername} />
+      <PopularSidebar />
+    </div>
+  );
+}
 
 function EditRecipeRoute() {
   const location = useLocation();
@@ -92,7 +108,11 @@ export default function App() {
 
       <main className="app-main">
         <Routes>
-          <Route path="/" element={<RecipeList onEdit={startEditing} currentUsername={username} />} />
+          <Route path="/" element={<HomePage onEdit={startEditing} currentUsername={username} />} />
+          <Route
+            path="/recipes/:id"
+            element={<RecipeFocusPage onEdit={startEditing} currentUsername={username} />}
+          />
           <Route
             path="/new"
             element={

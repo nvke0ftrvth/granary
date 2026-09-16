@@ -160,6 +160,18 @@ class RecipeControllerWebMvcTest {
     }
 
     @Test
+    void getPopularRecipes_returnsOkWithList() throws Exception {
+        RecipeResponseDto dto = new RecipeResponseDto();
+        dto.setId(7L);
+        when(bookmarkService.getMostBookmarkedRecipes(8)).thenReturn(List.of(dto));
+
+        mockMvc.perform(get("/api/recipes/popular"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(7));
+    }
+
+    @Test
     void createRecipe_valid_returns201WithLocationHeader() throws Exception {
         RecipeResponseDto response = new RecipeResponseDto();
         response.setId(42L);
