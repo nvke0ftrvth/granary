@@ -89,12 +89,21 @@ public class RecipeService {
                 .toList();
     }
 
+
+    public List<RecipeResponseDto> getByUsername(String username) {
+        log.debug("Fetching recipes owned by: {}", username);
+        return recipeRepository.findByUserUsername(username)
+                .stream()
+                .map(recipeMapper::toResponseDto)
+                .toList();
+    }
+
     public RecipeResponseDto update(Long id, RecipeRequestDto dto) {
         Recipe existing = recipeRepository.findById(id)
                 .orElseThrow(() -> new RecipeNotFoundException(id));
 
         assertOwnership(existing, currentUserService.getCurrentUser());
-        recipeMapper.updateEntityFromDto(dto, existing); // updates in place
+        recipeMapper.updateEntityFromDto(dto, existing);
         existing.setUpdated(LocalDateTime.now());
         log.info("Recipe with id " + id + " updated");
 
@@ -102,9 +111,7 @@ public class RecipeService {
     }
 
 
-    // @Transactional: this now does several related deletes (votes, comments,
-    // bookmarks, then the recipe) that need to succeed or fail together --
-    // without it, a failure partway through could leave orphaned rows behind.
+
     @Transactional
     public void delete(Long id) {
         Recipe existing = recipeRepository.findById(id)
@@ -112,9 +119,6 @@ public class RecipeService {
 
         assertOwnership(existing, currentUserService.getCurrentUser());
 
-        // Comments and bookmarks aren't wired to Recipe via JPA cascade, so they
-        // have to be cleaned up manually here first -- otherwise deleting a
-        // recipe that has either would throw an FK-violation 500.
         List<Comment> comments = commentRepository.findByRecipeIdOrderByCreatedAtAsc(id);
         if (!comments.isEmpty()) {
             List<Long> commentIds = comments.stream().map(Comment::getId).toList();
@@ -160,7 +164,7 @@ public class RecipeService {
             );
         }
 
-        int nextOrder = existingCount; // append after existing images
+        int nextOrder = existingCount; 
 
         for (MultipartFile file : files) {
             validateImageFile(file);

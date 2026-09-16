@@ -21,10 +21,16 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
+import com.example.granary.exceptions.NotLoggedInException;
+
+import java.util.List;
+
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -61,7 +67,30 @@ class CommentControllerTest {
     @MockitoBean
     private UserService userService;
 
-    // ------------------------------------------------------------- happy path
+    // GET /mine
+
+    @Test
+    void getMyComments_returnsOkWithList() throws Exception {
+        when(commentService.getMine()).thenReturn(
+                List.of(CommentResponseDto.builder().id(1L).content("Nice!").recipeTitle("Pancakes").build()));
+
+        mockMvc.perform(get("/api/comments/mine"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].recipeTitle").value("Pancakes"));
+    }
+
+    @Test
+    void getMyComments_notLoggedIn_returns401() throws Exception {
+
+        when(commentService.getMine())
+                .thenThrow(new NotLoggedInException("You must be logged in to perform this action"));
+
+        mockMvc.perform(get("/api/comments/mine"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // happy path
 
     @Test
     void updateComment_returnsOk() throws Exception {
@@ -95,7 +124,7 @@ class CommentControllerTest {
 
     @Test
     void voteComment_missingValue_returns400() throws Exception {
-        CommentVoteRequestDto request = new CommentVoteRequestDto(null); // fails @NotNull
+        CommentVoteRequestDto request = new CommentVoteRequestDto(null);
 
         mockMvc.perform(put("/api/comments/1/vote")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -110,7 +139,7 @@ class CommentControllerTest {
                 .andExpect(status().isNoContent());
     }
 
-    // -------------------------------------------------- GlobalExceptionHandler
+    // GlobalExceptionHandler
 
     @Nested
     class ExceptionMapping {

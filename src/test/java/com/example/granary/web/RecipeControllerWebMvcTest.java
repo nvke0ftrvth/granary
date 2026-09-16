@@ -103,7 +103,7 @@ class RecipeControllerWebMvcTest {
     @MockitoBean
     private UserService userService;
 
-    // ------------------------------------------------------------- happy path
+    // happy path
 
     @Test
     void getAllRecipes_returnsOkWithList() throws Exception {
@@ -125,10 +125,6 @@ class RecipeControllerWebMvcTest {
 
     @Test
     void getMyRecipes_notLoggedIn_returns401() throws Exception {
-        // Real auth enforcement for this route lives in SecurityConfig (GET
-        // /api/recipes/mine requires authentication), which is bypassed here
-        // by addFilters = false -- so this only covers what happens if a
-        // request reaches the service layer unauthenticated anyway.
         when(recipeService.getMine()).thenThrow(new NotLoggedInException("You must be logged in to perform this action"));
 
         mockMvc.perform(get("/api/recipes/mine"))
@@ -217,7 +213,7 @@ class RecipeControllerWebMvcTest {
                 .andExpect(status().isOk());
     }
 
-    // ------------------------------------------- comments/bookmarks via RecipeController
+    // comments/bookmarks via RecipeController
 
     @Test
     void getComments_returnsOk() throws Exception {
@@ -242,7 +238,7 @@ class RecipeControllerWebMvcTest {
 
     @Test
     void createComment_blankContent_returns400() throws Exception {
-        CommentRequestDto request = new CommentRequestDto("   ", null); // fails @NotBlank
+        CommentRequestDto request = new CommentRequestDto("   ", null);
 
         mockMvc.perform(post("/api/recipes/1/comments")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -274,7 +270,7 @@ class RecipeControllerWebMvcTest {
                 .andExpect(status().isNoContent());
     }
 
-    // -------------------------------------------------- GlobalExceptionHandler
+    // GlobalExceptionHandler
 
     @Nested
     class ExceptionMapping {
@@ -315,12 +311,7 @@ class RecipeControllerWebMvcTest {
 
         @Test
         void springSecurityAuthenticationException_nowCorrectlyReturns401() throws Exception {
-            // FIXED since the last review: GlobalExceptionHandler's
-            // @ExceptionHandler(AuthenticationException.class) is now bound
-            // to org.springframework.security.core.AuthenticationException
-            // (it used to be javax.naming.AuthenticationException, an
-            // unrelated class, which made this fall through to the 500
-            // catch-all). This test locks in the fix.
+
             when(recipeService.getById(1L))
                     .thenThrow(new InsufficientAuthenticationException("full authentication required"));
 

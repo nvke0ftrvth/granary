@@ -51,7 +51,9 @@ public class SecurityConfig {
                 // match first and let /mine through unauthenticated.
                 .requestMatchers(HttpMethod.GET, "/api/recipes/mine").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/recipes/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/users/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/recipes/**").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

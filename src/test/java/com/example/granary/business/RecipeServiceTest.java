@@ -95,7 +95,7 @@ class RecipeServiceTest {
         return other;
     }
 
-    // ---------------------------------------------------------------- create
+    //  create
     @Test
     void create_setsCurrentUserAndUpdatedTimestamp() {
         RecipeRequestDto dto = new RecipeRequestDto();
@@ -209,7 +209,26 @@ class RecipeServiceTest {
         }
     }
 
-    // ----------------------------------------------------------------- update
+    @Nested
+    class GetByUsername {
+
+        @Test
+        void returnsThatUsersRecipes_noAuthRequired() {
+            when(recipeRepository.findByUserUsername("owner")).thenReturn(List.of(recipe));
+            when(recipeMapper.toResponseDto(recipe)).thenReturn(new RecipeResponseDto());
+
+            assertThat(recipeService.getByUsername("owner")).hasSize(1);
+            verifyNoInteractions(currentUserService); // public -- no login needed
+        }
+
+        @Test
+        void unknownUsername_returnsEmptyList() {
+            when(recipeRepository.findByUserUsername("ghost")).thenReturn(List.of());
+
+            assertThat(recipeService.getByUsername("ghost")).isEmpty();
+        }
+    }
+
     @Nested
     class Update {
 

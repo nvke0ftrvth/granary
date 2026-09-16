@@ -39,7 +39,7 @@ class ImageStorageServiceTest {
         ReflectionTestUtils.setField(service, "uploadDir", tempDir.toString());
     }
 
-    // -------------------------------------------------------------------- store
+    // store
     @Test
     void store_createsUploadDirectoryIfMissing() {
         Path nestedDir = tempDir.resolve("does/not/exist/yet");
@@ -77,8 +77,6 @@ class ImageStorageServiceTest {
 
     @Test
     void store_pathTraversalInOriginalFilename_isCleaned() {
-        // StringUtils.cleanPath should strip "../" segments so a malicious
-        // original filename can't be used to escape the upload directory.
         MultipartFile file = new MockMultipartFile("file", "../../etc/passwd", "image/png", new byte[]{1});
 
         String filename = service.store(file);

@@ -1,21 +1,39 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import type { RecipeResponseDto } from '../types/recipe';
 import { format } from 'date-fns';
+import { BookmarkButton } from './BookmarkButton';
+import { ShareButton } from './ShareButton';
+import { CommentSection } from './CommentSection';
 interface RecipeCardProps {
   recipe: RecipeResponseDto;
   onEdit?: (recipe: RecipeResponseDto) => void;
   isOwner?: boolean;
+  defaultExpanded?: boolean;
+  linkTitle?: boolean;
 }
 
-export function RecipeCard({ recipe, onEdit, isOwner }: RecipeCardProps) {
-  const [expanded, setExpanded] = useState(false);
+export function RecipeCard({ recipe, onEdit, isOwner, defaultExpanded = false, linkTitle = false }: RecipeCardProps) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
 
   return (
     <article className="recipe-card">
       <div className="recipe-card-perforation" aria-hidden="true" />
 
       <header className="recipe-card-header">
-        <h3>{recipe.title}</h3>
+        <div className="recipe-title-group">
+          <h3>
+            {linkTitle ? (
+              <Link className="recipe-title-link" to={`/recipes/${recipe.id}`}>
+                {recipe.title}
+              </Link>
+            ) : (
+              recipe.title
+            )}
+          </h3>
+          <BookmarkButton recipeId={recipe.id} />
+          <ShareButton recipeId={recipe.id} />
+        </div>
         <div className="recipe-header-right">
           {recipe.tags && recipe.tags.length > 0 && (
             <ul className="recipe-tags">
@@ -27,7 +45,11 @@ export function RecipeCard({ recipe, onEdit, isOwner }: RecipeCardProps) {
           {recipe.prepTime && <p className="recipe-preptime">Prep time: {recipe.prepTime} min</p>}
         </div>
       </header>
-      {recipe.ownerUsername && <p className="recipe-createdBy">Created by: {recipe.ownerUsername}</p>}
+      {recipe.ownerUsername && (
+        <p className="recipe-createdBy">
+          Created by: <Link to={`/users/${recipe.ownerUsername}`}>{recipe.ownerUsername}</Link>
+        </p>
+      )}
       {recipe.updated && (
         <p className="recipe-date">Last updated: {format(new Date(recipe.updated),'yyyy/MM/dd HH:mm:ss')}</p>)}
 
@@ -93,6 +115,8 @@ export function RecipeCard({ recipe, onEdit, isOwner }: RecipeCardProps) {
           Show less ↑
         </button>
       )}
+
+      {expanded && <CommentSection recipeId={recipe.id} />}
 
       {onEdit && isOwner && expanded && (
         <button

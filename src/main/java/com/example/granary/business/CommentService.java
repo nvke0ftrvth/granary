@@ -50,8 +50,6 @@ public class CommentService {
                         Collectors.summingInt(CommentVote::getValue)
                 ));
 
-        // Only look up the viewer's own votes if someone is actually logged in --
-        // this endpoint is public, so there often isn't one.
         User viewer = currentUserService.getCurrentUserOrNull();
         Map<Long, Integer> myVoteByCommentId = viewer == null
                 ? Map.of()
@@ -89,6 +87,37 @@ public class CommentService {
                 myVoteByCommentId.get(comment.getId()),
                 replyDtos
         );
+    }
+
+    public List<CommentResponseDto> getMine() {
+        User currentUser = currentUserService.getCurrentUser();
+        List<Comment> comments =
+                commentRepository.findByUserUsernameAndDeletedFalseOrderByCreatedAtDesc(currentUser.getUsername());
+        if (comments.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> commentIds = comments.stream().map(Comment::getId).toList();
+        List<CommentVote> votes = commentVoteRepository.findByCommentIdIn(commentIds);
+
+        Map<Long, Integer> scoreByCommentId = votes.stream()
+                .collect(Collectors.groupingBy(
+                        v -> v.getComment().getId(),
+                        Collectors.summingInt(CommentVote::getValue)
+                ));
+
+        Map<Long, Integer> myVoteByCommentId = votes.stream()
+                .filter(v -> v.getUser().getId().equals(currentUser.getId()))
+                .collect(Collectors.toMap(v -> v.getComment().getId(), CommentVote::getValue));
+
+        return comments.stream()
+                .map(c -> toDto(
+                        c,
+                        scoreByCommentId.getOrDefault(c.getId(), 0),
+                        myVoteByCommentId.get(c.getId()),
+                        List.of()
+                ))
+                .toList();
     }
 
     public CommentResponseDto create(Long recipeId, CommentRequestDto dto) {
@@ -188,6 +217,7 @@ public class CommentService {
         return toDto(comment, score, myVote, List.of());
     }
 
+    @Transactional
     public void removeVote(Long commentId) {
         User currentUser = currentUserService.getCurrentUser();
         commentVoteRepository.deleteByCommentIdAndUserId(commentId, currentUser.getId());
@@ -222,6 +252,7 @@ public class CommentService {
                 .content(isDeleted ? "[deleted]" : c.getContent())
                 .authorUsername(isDeleted ? "[deleted]" : c.getUser().getUsername())
                 .recipeId(c.getRecipe().getId())
+                .recipeTitle(c.getRecipe().getTitle())
                 .parentId(c.getParent() != null ? c.getParent().getId() : null)
                 .deleted(isDeleted)
                 .score(score)

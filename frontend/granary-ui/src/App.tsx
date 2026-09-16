@@ -1,118 +1,130 @@
-import { useState } from 'react';
+import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { RecipeForm } from './components/RecipeForm';
 import { RecipeList } from './components/RecipeList';
+import { RecipeFocusPage } from './components/RecipeFocusPage';
 import { ProfilePage } from './components/ProfilePage';
+import { PublicProfilePage } from './components/PublicProfilePage';
 import { AuthForm } from './components/AuthForm';
+import { RequireAuth } from './components/RequireAuth';
 import { logout } from './store/authSlice';
 import type { RootState } from './store';
 import type { RecipeResponseDto } from './types/recipe';
 import './styles/tokens.css';
 import './styles/app.css';
 
-type View = 'list' | 'new' | 'edit' | 'login' | 'profile';
+function EditRecipeRoute() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const recipe = (location.state as { recipe?: RecipeResponseDto } | null)?.recipe;
+
+  if (!recipe) {
+    return <Navigate to="/" replace />;
+  }
+
+  const backToList = () => navigate('/');
+  return <RecipeForm recipe={recipe} onSaved={backToList} onCancel={backToList} />;
+}
 
 export default function App() {
-  const [view, setView] = useState<View>('list');
-  const [editingRecipe, setEditingRecipe] = useState<RecipeResponseDto | null>(null);
-
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
   const username = useSelector((state: RootState) => state.auth.username);
   const isLoggedIn = Boolean(username);
 
   const startEditing = (recipe: RecipeResponseDto) => {
-    setEditingRecipe(recipe);
-    setView('edit');
-  };
-
-  const startCreating = () => {
-    setEditingRecipe(null);
-    setView('new');
-  };
-
-  const backToList = () => {
-    setEditingRecipe(null);
-    setView('list');
+    navigate('/edit', { state: { recipe } });
   };
 
   const handleLogout = () => {
     dispatch(logout());
-    backToList();
+    navigate('/');
   };
 
-  const protectedViews: View[] = ['new', 'edit', 'profile'];
-  const effectiveView: View = !isLoggedIn && protectedViews.includes(view) ? 'login' : view;
+  const isActive = (path: string) => location.pathname === path;
 
   return (
     <div className="app-shell">
       <header className="app-header">
         <h1>Granary</h1>
 
-        <div className="app-header-right">
-          <nav className="view-toggle" role="tablist">
-            <button
-              role="tab"
-              aria-selected={view === 'list'}
-              className={view === 'list' ? 'active' : ''}
-              onClick={backToList}
-            >
-              Recipe box
-            </button>
-
-            {isLoggedIn && (
-              <>
-                <button
-                  role="tab"
-                  aria-selected={view === 'new'}
-                  className={view === 'new' ? 'active' : ''}
-                  onClick={startCreating}
-                >
-                  + New recipe
-                </button>
-                <button
-                  role="tab"
-                  aria-selected={view === 'profile'}
-                  className={view === 'profile' ? 'active' : ''}
-                  onClick={() => setView('profile')}
-                >
-                  My recipes
-                </button>
-              </>
-            )}
-
-            {!isLoggedIn && (
-              <button
-                role="tab"
-                aria-selected={view === 'login'}
-                className={view === 'login' ? 'active' : ''}
-                onClick={() => setView('login')}
-              >
-                Log in
-              </button>
-            )}
-          </nav>
+        <nav className="view-toggle" role="tablist">
+          <Link role="tab" aria-selected={isActive('/')} className={isActive('/') ? 'active' : ''} to="/">
+            Recipe box
+          </Link>
 
           {isLoggedIn && (
-            <div className="user-indicator">
-              <span className="user-indicator-name">Signed in as {username}</span>
+            <>
+              <Link
+                role="tab"
+                aria-selected={isActive('/new')}
+                className={isActive('/new') ? 'active' : ''}
+                to="/new"
+              >
+                + New recipe
+              </Link>
+              <Link
+                role="tab"
+                aria-selected={isActive('/profile')}
+                className={isActive('/profile') ? 'active' : ''}
+                to="/profile"
+              >
+                {username}
+              </Link>
               <button type="button" className="logout-btn" onClick={handleLogout}>
                 Log out
               </button>
-            </div>
+            </>
           )}
-        </div>
+
+          {!isLoggedIn && (
+            <Link
+              role="tab"
+              aria-selected={isActive('/login')}
+              className={isActive('/login') ? 'active' : ''}
+              to="/login"
+            >
+              Log in
+            </Link>
+          )}
+        </nav>
       </header>
 
       <main className="app-main">
-        {effectiveView === 'list' && (
-          <RecipeList onEdit={startEditing} currentUsername={username} />
-        )}
-        {effectiveView === 'new' && <RecipeForm onSaved={backToList} />}
-        {effectiveView === 'edit' && editingRecipe && (
-          <RecipeForm recipe={editingRecipe} onSaved={backToList} onCancel={backToList} />
-        )}
-        {effectiveView === 'login' && <AuthForm onSuccess={backToList} />}
-        {effectiveView === 'profile' && <ProfilePage onEdit={startEditing} />}
+        <Routes>
+          <Route path="/" element={<RecipeList onEdit={startEditing} currentUsername={username} />} />
+          <Route
+            path="/recipes/:id"
+            element={<RecipeFocusPage onEdit={startEditing} currentUsername={username} />}
+          />
+          <Route
+            path="/new"
+            element={
+              <RequireAuth>
+                <RecipeForm onSaved={() => navigate('/')} />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/edit"
+            element={
+              <RequireAuth>
+                <EditRecipeRoute />
+              </RequireAuth>
+            }
+          />
+          <Route path="/login" element={<AuthForm onSuccess={() => navigate('/')} />} />
+          <Route
+            path="/profile"
+            element={
+              <RequireAuth>
+                <ProfilePage onEdit={startEditing} />
+              </RequireAuth>
+            }
+          />
+          <Route path="/users/:username" element={<PublicProfilePage />} />
+        </Routes>
       </main>
     </div>
   );
