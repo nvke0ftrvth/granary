@@ -7,10 +7,12 @@ import { PublicProfilePage } from './components/PublicProfilePage';
 import { AuthForm } from './components/AuthForm';
 import { RequireAuth } from './components/RequireAuth';
 import { logout } from './store/authSlice';
-import type { RootState } from './store';
-import type { RecipeResponseDto } from './types/recipe';
 import './styles/tokens.css';
 import './styles/app.css';
+import './styles/loading.css';
+import type { RootState } from './store';
+import { TopProgressBar } from './components/TopProgressBar';
+import type { RecipeResponseDto } from './types/recipe';
 
 function EditRecipeRoute() {
   const location = useLocation();
@@ -45,6 +47,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
+      <TopProgressBar />
       <header className="app-header">
         <h1>Granary</h1>
 

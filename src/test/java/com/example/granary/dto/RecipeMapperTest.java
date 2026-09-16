@@ -32,7 +32,7 @@ class RecipeMapperTest {
         mapper = new RecipeMapperImpl();
     }
 
-    // ------------------------------------------------------------- toEntity
+    // toEntity
     @Test
     void toEntity_ignoresIdImagesAndUpdated() {
         RecipeRequestDto dto = new RecipeRequestDto();
@@ -61,13 +61,7 @@ class RecipeMapperTest {
 
     @Test
     void toEntity_doesNotIgnoreUser_soServiceLayerMustOverwriteItOnCreate() {
-        // NOTE: unlike updateEntityFromDto, toEntity has no @Mapping(target =
-        // "user", ignore = true), so a client-supplied dto.user WOULD flow
-        // straight into the entity here. RecipeService.create() happens to
-        // overwrite it immediately afterward with the authenticated user, so
-        // this isn't currently exploitable — but that protection lives in the
-        // service, not the mapper. If toEntity is ever called from anywhere
-        // else, this test is the tripwire.
+
         RecipeRequestDto dto = new RecipeRequestDto();
         dto.setTitle("Waffles");
         User spoofedOwner = new User("attacker", "a@test.com", "pw");
@@ -78,7 +72,7 @@ class RecipeMapperTest {
         assertThat(entity.getUser()).isSameAs(spoofedOwner);
     }
 
-    // -------------------------------------------------------- toResponseDto
+    // toResponseDto
     @Test
     void toResponseDto_mapsOwnerUsernameFromNestedUser() {
         Recipe recipe = new Recipe();
@@ -110,7 +104,7 @@ class RecipeMapperTest {
         assertThat(mapper.toResponseDto(null)).isNull();
     }
 
-    // ------------------------------------------------------------ toImageDto
+    // toImageDto
     @Test
     void toImageDto_mapsAllFields() {
         RecipeImage image = RecipeImage.builder()
@@ -139,7 +133,7 @@ class RecipeMapperTest {
         existing.setImages(existingImages);
 
         RecipeRequestDto dto = new RecipeRequestDto();
-        dto.setId(555L); // must not overwrite existing.id
+        dto.setId(555L); 
         dto.setTitle("New Title");
         dto.setUpdated(LocalDateTime.of(2099, 1, 1, 0, 0)); // must not overwrite
         dto.setUser(new User("attacker", "a@test.com", "pw")); // must not overwrite
@@ -155,13 +149,7 @@ class RecipeMapperTest {
 
     @Test
     void updateEntityFromDto_nullFieldOnDtoOverwritesExistingValue() {
-        // GOTCHA: MapStruct's default null-handling policy still calls the
-        // setter with null unless @BeanMapping(nullValuePropertyMappingStrategy
-        // = IGNORE) is configured. That makes this a PUT (full replace), not a
-        // PATCH — a caller who omits "description" wipes it out rather than
-        // leaving it untouched. Bookmark this test: if partial-update
-        // semantics are ever expected here, this is the test that should
-        // start failing.
+
         Recipe existing = new Recipe();
         existing.setDescription("existing description");
 
@@ -177,10 +165,7 @@ class RecipeMapperTest {
     @Test
     void updateEntityFromDto_tagsAreFullyReplacedNotMerged() {
         Recipe existing = new Recipe();
-        // Mutable list: the mapper clears and re-populates the existing target
-        // collection in place (rather than replacing the reference) to preserve
-        // collection identity for Hibernate-managed collections -- List.of()
-        // would fail with UnsupportedOperationException on that clear().
+
         existing.setTags(new ArrayList<>(List.of("breakfast", "quick")));
 
         RecipeRequestDto dto = new RecipeRequestDto();
