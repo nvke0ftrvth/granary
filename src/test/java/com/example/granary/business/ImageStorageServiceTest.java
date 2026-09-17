@@ -94,7 +94,7 @@ class ImageStorageServiceTest {
         assertThat(tempDir.resolve(filename)).exists();
     }
 
-    // ------------------------------------------------------------------- delete
+    //  delete
     @Test
     void delete_existingFile_removesIt() throws IOException {
         Path file = tempDir.resolve("a.png");
