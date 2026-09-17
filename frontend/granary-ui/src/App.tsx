@@ -2,6 +2,7 @@ import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-r
 import { useDispatch, useSelector } from 'react-redux';
 import { RecipeForm } from './components/RecipeForm';
 import { RecipeList } from './components/RecipeList';
+
 import { RecipeFocusPage } from './components/RecipeFocusPage';
 import { PopularSidebar } from './components/PopularSidebar';
 import { ProfilePage } from './components/ProfilePage';
@@ -111,10 +112,14 @@ export default function App() {
 
       <main className="app-main">
         <Routes>
-          <Route path="/" element={<HomePage onEdit={startEditing} currentUsername={username} />} />
           <Route
-            path="/recipes/:id"
-            element={<RecipeFocusPage onEdit={startEditing} currentUsername={username} />}
+            path="/"
+            element={
+              <div className="home-layout">
+                <RecipeList onEdit={startEditing} currentUsername={username} />
+                <PopularSidebar />
+              </div>
+            }
           />
           <Route
             path="/new"
@@ -140,6 +145,10 @@ export default function App() {
                 <ProfilePage onEdit={startEditing} />
               </RequireAuth>
             }
+          />
+          <Route
+            path="/recipes/:id"
+            element={<RecipeFocusPage onEdit={startEditing} currentUsername={username} />}
           />
           <Route path="/users/:username" element={<PublicProfilePage />} />
         </Routes>

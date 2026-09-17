@@ -64,6 +64,13 @@ public class RecipeController {
     }
 
 
+    // GET the most-bookmarked recipes (public -- covered by the class-level GET permitAll rule)
+    @GetMapping("/popular")
+    public ResponseEntity<List<RecipeResponseDto>> getPopularRecipes() {
+        return ResponseEntity.ok(recipeService.getPopular());
+    }
+
+
     // GET recipes by category
     @GetMapping("/tag/{tag}")
     public ResponseEntity<List<RecipeResponseDto>> getByCategory(@PathVariable String tag) {

@@ -8,10 +8,11 @@ interface RecipeCardProps {
   recipe: RecipeResponseDto;
   onEdit?: (recipe: RecipeResponseDto) => void;
   isOwner?: boolean;
+  defaultExpanded?: boolean;
 }
 
-export function RecipeCard({ recipe, onEdit, isOwner }: RecipeCardProps) {
-  const [expanded, setExpanded] = useState(false);
+export function RecipeCard({ recipe, onEdit, isOwner, defaultExpanded }: RecipeCardProps) {
+  const [expanded, setExpanded] = useState(defaultExpanded ?? false);
 
   return (
     <article className="recipe-card">

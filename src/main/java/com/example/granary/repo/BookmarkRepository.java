@@ -14,7 +14,6 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
     boolean existsByUserIdAndRecipeId(Long userId, Long recipeId);
     void deleteByUserIdAndRecipeId(Long userId, Long recipeId);
     void deleteByRecipeId(Long recipeId);
-
-    @Query("SELECT b.recipe FROM Bookmark b GROUP BY b.recipe ORDER BY COUNT(b) DESC")
-    List<Recipe> findMostBookmarked(Pageable pageable);
+    @Query("SELECT b.recipe.id FROM Bookmark b GROUP BY b.recipe.id ORDER BY COUNT(b) DESC")
+    List<Long> findMostBookmarkedRecipeIds(Pageable pageable);
 }

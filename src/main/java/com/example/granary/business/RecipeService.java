@@ -3,8 +3,10 @@ package com.example.granary.business;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -35,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 public class RecipeService {
 
     private static final int MAX_IMAGES_PER_RECIPE = 3;
+    private static final int POPULAR_RECIPES_LIMIT = 10;
     private static final long MAX_IMAGE_SIZE_BYTES = 2L * 1024 * 1024; // 2MB
 
     private final RecipeRepository recipeRepository;
@@ -94,6 +97,19 @@ public class RecipeService {
         log.debug("Fetching recipes owned by: {}", username);
         return recipeRepository.findByUserUsername(username)
                 .stream()
+                .map(recipeMapper::toResponseDto)
+                .toList();
+    }
+
+    public List<RecipeResponseDto> getPopular() {
+        log.debug("Fetching popular recipes");
+        List<Long> ids = bookmarkRepository.findMostBookmarkedRecipeIds(PageRequest.of(0, POPULAR_RECIPES_LIMIT));
+        Map<Long, Recipe> recipesById = recipeRepository.findAllById(ids).stream()
+                .collect(Collectors.toMap(Recipe::getId, r -> r));
+
+        return ids.stream()
+                .map(recipesById::get)
+                .filter(Objects::nonNull)
                 .map(recipeMapper::toResponseDto)
                 .toList();
     }
