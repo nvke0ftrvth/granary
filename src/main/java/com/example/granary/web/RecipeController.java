@@ -35,6 +35,8 @@ import lombok.RequiredArgsConstructor;
 @Validated
 public class RecipeController {
 
+    private static final int POPULAR_RECIPES_LIMIT = 8;
+
     private final RecipeService recipeService;
     private final CommentService commentService;
     private final BookmarkService bookmarkService;
@@ -80,6 +82,13 @@ public class RecipeController {
     @GetMapping("/search")
     public ResponseEntity<List<RecipeResponseDto>> search(@RequestParam String query) {
         return ResponseEntity.ok(recipeService.search(query));
+    }
+
+
+    // GET the 8 recipes with the most bookmarks, most-bookmarked first (public)
+    @GetMapping("/popular")
+    public ResponseEntity<List<RecipeResponseDto>> getPopularRecipes() {
+        return ResponseEntity.ok(bookmarkService.getMostBookmarkedRecipes(POPULAR_RECIPES_LIMIT));
     }
 
 
