@@ -36,6 +36,8 @@ export const recipeApi = createApi({
             ]
           : [{ type: 'Recipe', id: 'MINE' }],
     }),
+<<<<<<< HEAD
+=======
     getPopularRecipes: builder.query<RecipeResponseDto[], void>({
       query: () => '/popular',
       providesTags: (result) =>
@@ -50,6 +52,7 @@ export const recipeApi = createApi({
       query: (id) => `/${id}`,
       providesTags: (_result, _error, id) => [{ type: 'Recipe', id }],
     }),
+>>>>>>> master
     getPopularRecipes: builder.query<RecipeResponseDto[], void>({
       query: () => '/popular',
       providesTags: (result) =>
@@ -59,6 +62,10 @@ export const recipeApi = createApi({
               { type: 'Recipe', id: 'POPULAR' },
             ]
           : [{ type: 'Recipe', id: 'POPULAR' }],
+    }),
+    getRecipeById: builder.query<RecipeResponseDto, number>({
+      query: (id) => `/${id}`,
+      providesTags: (_result, _error, id) => [{ type: 'Recipe', id }],
     }),
     createRecipe: builder.mutation<RecipeResponseDto, RecipeRequestDto>({
       query: (body) => ({ url: '', method: 'POST', body }),
@@ -93,9 +100,13 @@ export const recipeApi = createApi({
 export const {
   useGetRecipesQuery,
   useGetMyRecipesQuery,
+<<<<<<< HEAD
+=======
   useGetPopularRecipesQuery,
   useGetRecipeByIdQuery,
+>>>>>>> master
   useGetPopularRecipesQuery,
+  useGetRecipeByIdQuery,
   useCreateRecipeMutation,
   useUpdateRecipeMutation,
   useUploadImagesMutation,

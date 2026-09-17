@@ -64,10 +64,10 @@ public class RecipeController {
     }
 
 
-    // GET the most-bookmarked recipes (public -- covered by the class-level GET permitAll rule)
+    // GET the 8 recipes with the most bookmarks, most-bookmarked first (public)
     @GetMapping("/popular")
     public ResponseEntity<List<RecipeResponseDto>> getPopularRecipes() {
-        return ResponseEntity.ok(recipeService.getPopular());
+        return ResponseEntity.ok(bookmarkService.getMostBookmarkedRecipes(POPULAR_RECIPES_LIMIT));
     }
 
 
@@ -82,13 +82,6 @@ public class RecipeController {
     @GetMapping("/search")
     public ResponseEntity<List<RecipeResponseDto>> search(@RequestParam String query) {
         return ResponseEntity.ok(recipeService.search(query));
-    }
-
-
-    // GET the 8 recipes with the most bookmarks, most-bookmarked first (public)
-    @GetMapping("/popular")
-    public ResponseEntity<List<RecipeResponseDto>> getPopularRecipes() {
-        return ResponseEntity.ok(bookmarkService.getMostBookmarkedRecipes(POPULAR_RECIPES_LIMIT));
     }
 
 
