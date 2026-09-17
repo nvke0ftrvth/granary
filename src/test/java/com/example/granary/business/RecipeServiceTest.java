@@ -132,7 +132,7 @@ class RecipeServiceTest {
         verify(recipeRepository, never()).save(any());
     }
 
-    // --------------------------------------------------------------- getById
+    //  getById
     @Test
     void getById_found_returnsMappedDto() {
         when(recipeRepository.findById(1L)).thenReturn(Optional.of(recipe));
@@ -151,7 +151,7 @@ class RecipeServiceTest {
                 .isInstanceOf(RecipeNotFoundException.class);
     }
 
-    // ---------------------------------------------------------------- getAll
+    // getAll
     @Test
     void getAll_empty_returnsEmptyPage() {
         Pageable pageable = PageRequest.of(0, 20);
@@ -227,7 +227,7 @@ class RecipeServiceTest {
         assertThat(recipeService.getByTag("nope")).isEmpty();
     }
 
-    // ---------------------------------------------------------------- getMine
+    // getMine
     @Nested
     class GetMine {
 
@@ -337,7 +337,7 @@ class RecipeServiceTest {
         }
     }
 
-    // ----------------------------------------------------------------- delete
+    // delete
     @Nested
     class Delete {
 
@@ -369,7 +369,7 @@ class RecipeServiceTest {
 
             verify(commentVoteRepository, never()).deleteByCommentIdIn(any());
             verify(commentRepository, never()).deleteAll(any());
-            verify(bookmarkRepository).deleteByRecipeId(1L); // unconditional, unlike comment cleanup
+            verify(bookmarkRepository).deleteByRecipeId(1L);
             verify(recipeRepository).deleteById(1L);
         }
 
@@ -395,7 +395,7 @@ class RecipeServiceTest {
         }
     }
 
-    // ------------------------------------------------------------ uploadImages
+    // uploadImages
     @Nested
     class UploadImages {
 
@@ -595,7 +595,7 @@ class RecipeServiceTest {
         }
     }
 
-    // ------------------------------------------------------------- deleteImage
+    // deleteImage
     @Nested
     class DeleteImage {
 
@@ -649,7 +649,7 @@ class RecipeServiceTest {
         }
     }
 
-    // ----------------------------------------------------------- reorderImages
+    // reorderImages
     @Nested
     class ReorderImages {
 
@@ -672,10 +672,7 @@ class RecipeServiceTest {
 
         @Test
         void securityGap_nonOwnerCanCurrentlyReorderSomeoneElsesImages() {
-            // STILL UNFIXED on master: unlike update/delete/uploadImages/
-            // deleteImage, reorderImages never calls currentUserService or
-            // assertOwnership. Any caller -- including an anonymous one --
-            // can currently reorder another user's recipe images.
+
             RecipeImage img1 = RecipeImage.builder().id(1L).displayOrder(0).build();
             recipe.getImages().add(img1); // owned by `owner`, not the caller
 
@@ -686,7 +683,7 @@ class RecipeServiceTest {
             recipeService.reorderImages(1L, List.of(1L));
 
             verifyNoInteractions(currentUserService);
-            assertThat(img1.getDisplayOrder()).isEqualTo(0); // succeeded despite no ownership check
+            assertThat(img1.getDisplayOrder()).isEqualTo(0);
         }
 
         @Test

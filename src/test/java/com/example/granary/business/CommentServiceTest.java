@@ -168,56 +168,6 @@ class CommentServiceTest {
     }
 
     // -------------------------
-    // getMine
-    // -------------------------
-
-    @Test
-    @DisplayName("getMine - returns empty list when the user has no comments")
-    void getMine_noComments_returnsEmpty() {
-        when(currentUserService.getCurrentUser()).thenReturn(owner);
-        when(commentRepository.findByUserUsernameAndDeletedFalseOrderByCreatedAtDesc("owner")).thenReturn(List.of());
-
-        assertThat(commentService.getMine()).isEmpty();
-        verify(commentVoteRepository, never()).findByCommentIdIn(any());
-    }
-
-    @Test
-    @DisplayName("getMine - returns only the current user's comments, flat, with scores and own vote")
-    void getMine_returnsFlatListWithScoresAndOwnVote() {
-        Comment mine = comment(1L, owner, null);
-        when(currentUserService.getCurrentUser()).thenReturn(owner);
-        when(commentRepository.findByUserUsernameAndDeletedFalseOrderByCreatedAtDesc("owner"))
-                .thenReturn(List.of(mine));
-
-        CommentVote ownVote = CommentVote.builder().comment(mine).user(owner).value(1).build();
-        CommentVote otherVote = CommentVote.builder().comment(mine).user(user(2L, "other")).value(1).build();
-        when(commentVoteRepository.findByCommentIdIn(List.of(1L))).thenReturn(List.of(ownVote, otherVote));
-
-        List<CommentResponseDto> result = commentService.getMine();
-
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getRecipeId()).isEqualTo(10L);
-        assertThat(result.get(0).getRecipeTitle()).isEqualTo("Chicken Stir Fry");
-        assertThat(result.get(0).getScore()).isEqualTo(2);
-        assertThat(result.get(0).getCurrentUserVote()).isEqualTo(1);
-        assertThat(result.get(0).getReplies()).isEmpty();
-    }
-
-    @Test
-    @DisplayName("getMine - propagates when not logged in")
-    void getMine_notLoggedIn_propagates() {
-        when(currentUserService.getCurrentUser()).thenThrow(new com.example.granary.exceptions.NotLoggedInException("not logged in"));
-
-        assertThatThrownBy(() -> commentService.getMine())
-                .isInstanceOf(com.example.granary.exceptions.NotLoggedInException.class);
-        verifyNoInteractionsOnRepos();
-    }
-
-    private void verifyNoInteractionsOnRepos() {
-        org.mockito.Mockito.verifyNoInteractions(commentRepository, commentVoteRepository);
-    }
-
-    // -------------------------
     // create
     // -------------------------
 

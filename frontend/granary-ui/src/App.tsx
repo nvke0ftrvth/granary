@@ -17,20 +17,6 @@ import type { RootState } from './store';
 import { TopProgressBar } from './components/TopProgressBar';
 import type { RecipeResponseDto } from './types/recipe';
 
-interface HomePageProps {
-  onEdit: (recipe: RecipeResponseDto) => void;
-  currentUsername?: string | null;
-}
-
-function HomePage({ onEdit, currentUsername }: HomePageProps) {
-  return (
-    <div className="home-layout">
-      <RecipeList onEdit={onEdit} currentUsername={currentUsername} />
-      <PopularSidebar />
-    </div>
-  );
-}
-
 function EditRecipeRoute() {
   const location = useLocation();
   const navigate = useNavigate();

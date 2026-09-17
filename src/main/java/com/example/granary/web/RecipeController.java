@@ -72,6 +72,13 @@ public class RecipeController {
     }
 
 
+    // GET the 8 recipes with the most bookmarks, most-bookmarked first (public)
+    @GetMapping("/popular")
+    public ResponseEntity<List<RecipeResponseDto>> getPopularRecipes() {
+        return ResponseEntity.ok(bookmarkService.getMostBookmarkedRecipes(POPULAR_RECIPES_LIMIT));
+    }
+
+
     // GET recipes by category
     @GetMapping("/tag/{tag}")
     public ResponseEntity<List<RecipeResponseDto>> getByCategory(@PathVariable String tag) {
@@ -83,13 +90,6 @@ public class RecipeController {
     @GetMapping("/search")
     public ResponseEntity<List<RecipeResponseDto>> search(@RequestParam String query) {
         return ResponseEntity.ok(recipeService.search(query));
-    }
-
-
-    // GET the 8 recipes with the most bookmarks, most-bookmarked first (public)
-    @GetMapping("/popular")
-    public ResponseEntity<List<RecipeResponseDto>> getPopularRecipes() {
-        return ResponseEntity.ok(bookmarkService.getMostBookmarkedRecipes(POPULAR_RECIPES_LIMIT));
     }
 
 

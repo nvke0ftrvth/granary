@@ -1,11 +1,4 @@
-/**
- * Placeholder that mirrors a collapsed RecipeCard.
- *
- * Deliberately reuses the real `.recipe-card` class so it inherits the card's
- * actual background, radius, padding and perforation from app.css — if the card
- * is restyled, the skeleton follows. `.is-skeleton` only switches off the hover
- * lift and pointer interaction.
- */
+
 export function RecipeCardSkeleton() {
   return (
     <article className="recipe-card is-skeleton" aria-hidden="true">
@@ -32,7 +25,6 @@ export function RecipeCardSkeleton() {
   );
 }
 
-/** A full page of placeholders — six fills the 2 x 3 grid. */
 export function RecipeListSkeleton({
   count = 6,
   label = 'Loading recipes',
