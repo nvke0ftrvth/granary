@@ -1,6 +1,8 @@
 package com.example.granary.business;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -12,20 +14,56 @@ import org.springframework.stereotype.Service;
 import com.example.granary.model.User;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.WeakKeyException;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class JwtService {
 
+    // Minimum decoded key length (bytes) required by jjwt for HS256.
+    private static final int MIN_KEY_BYTES = 32;
+
     @Value("${app.jwt.secret}")
     private String secretKey;
 
+    // Comma-separated, previously-active secrets accepted only when verifying tokens (never for signing).
+    @Value("${app.jwt.secret.previous:}")
+    private String previousSecretKeys;
+
     @Value("${app.jwt.expiration}")
     private long expirationMs;
+
+    private SecretKey signingKey;
+    private List<SecretKey> previousSigningKeys;
+
+    @PostConstruct
+    void init() {
+        this.signingKey = buildKey("JWT_SECRET", secretKey, true);
+
+        this.previousSigningKeys = new ArrayList<>();
+        for (String candidate : previousSecretKeys.split(",")) {
+            String trimmed = candidate.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            SecretKey key = buildKey("JWT_SECRET_PREVIOUS", trimmed, false);
+            if (key != null) {
+                previousSigningKeys.add(key);
+            }
+        }
+        if (!previousSigningKeys.isEmpty()) {
+            log.info("JWT key rotation active: {} previous secret(s) will still be accepted when verifying tokens",
+                    previousSigningKeys.size());
+        }
+    }
 
     // -------------------------
     // Generate a token for a user
@@ -43,7 +81,7 @@ public class JwtService {
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expirationMs))
-                .signWith(getSigningKey())
+                .signWith(signingKey)
                 .compact();
     }
 
@@ -92,16 +130,66 @@ public class JwtService {
 
     // Returns: Claims (the full decoded payload of the token)
     private Claims extractAllClaims(String token) {
+        try {
+            return parseWithKey(token, signingKey);
+        } catch (JwtException ex) {
+            for (SecretKey previousKey : previousSigningKeys) {
+                try {
+                    return parseWithKey(token, previousKey);
+                } catch (JwtException ignored) {
+                    // try the next previous key
+                }
+            }
+            throw ex;
+        }
+    }
+
+    private Claims parseWithKey(String token, SecretKey key) {
         return Jwts.parser()
-                .verifyWith(getSigningKey())
+                .verifyWith(key)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
     }
 
-    // Returns: SecretKey (the signing key derived from your secret string)
-    private SecretKey getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
+    // Decodes and validates a Base64 secret into a signing key. When required is true,
+    // a misconfigured secret fails startup instead of surfacing later as a token-parsing error.
+    private SecretKey buildKey(String sourceName, String secret, boolean required) {
+        if (secret == null || secret.isBlank()) {
+            if (required) {
+                throw new IllegalStateException(
+                        sourceName + " is missing or blank. Set the " + sourceName
+                        + " environment variable to a Base64-encoded value of at least "
+                        + MIN_KEY_BYTES + " bytes (256 bits), e.g. `openssl rand -base64 32`.");
+            }
+            return null;
+        }
+
+        byte[] keyBytes;
+        try {
+            keyBytes = Decoders.BASE64.decode(secret);
+        } catch (RuntimeException ex) {
+            return failOrSkip(required, sourceName + " is not valid Base64: " + ex.getMessage(), ex);
+        }
+
+        if (keyBytes.length < MIN_KEY_BYTES) {
+            return failOrSkip(required, String.format(
+                    "%s decodes to %d bytes, but at least %d bytes (256 bits) are required.",
+                    sourceName, keyBytes.length, MIN_KEY_BYTES), null);
+        }
+
+        try {
+            return Keys.hmacShaKeyFor(keyBytes);
+        } catch (WeakKeyException ex) {
+            return failOrSkip(required, sourceName + " is too weak to sign tokens: " + ex.getMessage(), ex);
+        }
+    }
+
+    private SecretKey failOrSkip(boolean required, String message, Exception cause) {
+        if (required) {
+            throw new IllegalStateException(message, cause);
+        }
+        log.warn("Ignoring invalid previous JWT secret: {}", message);
+        return null;
     }
 }
