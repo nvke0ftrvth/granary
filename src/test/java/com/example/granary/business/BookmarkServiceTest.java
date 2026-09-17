@@ -91,6 +91,41 @@ class BookmarkServiceTest {
     }
 
     // -------------------------
+    // getMostBookmarkedRecipes
+    // -------------------------
+
+    @Test
+    @DisplayName("getMostBookmarkedRecipes - maps the repository's ordered result to DTOs")
+    void getMostBookmarkedRecipes_mapsInOrder() {
+        Recipe second = new Recipe("Banana Bread", currentUser);
+        second.setId(11L);
+
+        RecipeResponseDto recipeDto = new RecipeResponseDto();
+        recipeDto.setId(10L);
+        RecipeResponseDto secondDto = new RecipeResponseDto();
+        secondDto.setId(11L);
+
+        when(bookmarkRepository.findMostBookmarked(any())).thenReturn(List.of(recipe, second));
+        when(recipeMapper.toResponseDto(recipe)).thenReturn(recipeDto);
+        when(recipeMapper.toResponseDto(second)).thenReturn(secondDto);
+
+        List<RecipeResponseDto> result = bookmarkService.getMostBookmarkedRecipes(8);
+
+        assertThat(result).containsExactly(recipeDto, secondDto);
+    }
+
+    @Test
+    @DisplayName("getMostBookmarkedRecipes - returns empty list when there are no bookmarks")
+    void getMostBookmarkedRecipes_empty() {
+        when(bookmarkRepository.findMostBookmarked(any())).thenReturn(List.of());
+
+        List<RecipeResponseDto> result = bookmarkService.getMostBookmarkedRecipes(8);
+
+        assertThat(result).isEmpty();
+        verify(recipeMapper, never()).toResponseDto(any());
+    }
+
+    // -------------------------
     // addBookmark
     // -------------------------
 

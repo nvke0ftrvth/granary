@@ -1,6 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { RecipeResponseDto } from '../types/recipe';
 import type { RootState } from './index';
+import { recipeApi } from './recipeApi';
 
 export const bookmarkApi = createApi({
   reducerPath: 'bookmarkApi',
@@ -29,10 +30,18 @@ export const bookmarkApi = createApi({
     addBookmark: builder.mutation<void, number>({
       query: (recipeId) => ({ url: `recipes/${recipeId}/bookmark`, method: 'POST' }),
       invalidatesTags: [{ type: 'Bookmark', id: 'LIST' }],
+      async onQueryStarted(_recipeId, { dispatch, queryFulfilled }) {
+        await queryFulfilled;
+        dispatch(recipeApi.util.invalidateTags([{ type: 'Recipe', id: 'POPULAR' }]));
+      },
     }),
     removeBookmark: builder.mutation<void, number>({
       query: (recipeId) => ({ url: `recipes/${recipeId}/bookmark`, method: 'DELETE' }),
       invalidatesTags: [{ type: 'Bookmark', id: 'LIST' }],
+      async onQueryStarted(_recipeId, { dispatch, queryFulfilled }) {
+        await queryFulfilled;
+        dispatch(recipeApi.util.invalidateTags([{ type: 'Recipe', id: 'POPULAR' }]));
+      },
     }),
   }),
 });

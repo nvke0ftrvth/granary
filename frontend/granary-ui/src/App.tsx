@@ -2,17 +2,34 @@ import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-r
 import { useDispatch, useSelector } from 'react-redux';
 import { RecipeForm } from './components/RecipeForm';
 import { RecipeList } from './components/RecipeList';
-import { PopularSidebar } from './components/PopularSidebar';
+
 import { RecipeFocusPage } from './components/RecipeFocusPage';
+import { PopularSidebar } from './components/PopularSidebar';
 import { ProfilePage } from './components/ProfilePage';
 import { PublicProfilePage } from './components/PublicProfilePage';
 import { AuthForm } from './components/AuthForm';
 import { RequireAuth } from './components/RequireAuth';
 import { logout } from './store/authSlice';
-import type { RootState } from './store';
-import type { RecipeResponseDto } from './types/recipe';
 import './styles/tokens.css';
 import './styles/app.css';
+import './styles/loading.css';
+import type { RootState } from './store';
+import { TopProgressBar } from './components/TopProgressBar';
+import type { RecipeResponseDto } from './types/recipe';
+
+interface HomePageProps {
+  onEdit: (recipe: RecipeResponseDto) => void;
+  currentUsername?: string | null;
+}
+
+function HomePage({ onEdit, currentUsername }: HomePageProps) {
+  return (
+    <div className="home-layout">
+      <RecipeList onEdit={onEdit} currentUsername={currentUsername} />
+      <PopularSidebar />
+    </div>
+  );
+}
 
 function EditRecipeRoute() {
   const location = useLocation();
@@ -47,6 +64,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
+      <TopProgressBar />
       <header className="app-header">
         <h1>Granary</h1>
 

@@ -1,19 +1,86 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+/* Organic design system tokens.
+   Replaces the previous Fraunces/Inter paper theme. The old variable names
+   (--paper, --ink, --rust ...) are kept as aliases at the bottom so nothing
+   in app.css breaks while you migrate. */
 
 :root {
-  /* Color: recipe-box paper, not dashboard-cream */
-  --paper: #faf6ee;
-  --paper-dim: #f1ead9;
-  --ink: #2b2620;
-  --ink-soft: #6b6559;
-  --sage: #6b7a5e;
-  --rust: #a54b24;
-  --line: #d8cfbc;
+  /* Roles */
+  --color-bg: #f5ead8;
+  --color-surface: #f9f4ed;
+  --color-text: #201e1d;
+  --color-text-soft: #645c50;
+  --color-accent: #c67139;
+  --color-accent-2: #7a8a5e;
+  --color-border: #dcd3c4;
+
+  /* Neutral ramp */
+  --color-neutral-100: #f9f4ed;
+  --color-neutral-200: #eee7db;
+  --color-neutral-300: #e3d8c2;
+  --color-neutral-400: #c0b6a5;
+  --color-neutral-500: #9c9384;
+  --color-neutral-600: #82796a;
+  --color-neutral-700: #645c50;
+  --color-neutral-800: #474238;
+  --color-neutral-900: #201e1d;
+
+  /* Accent ramp (terracotta) */
+  --color-accent-100: #fff2eb;
+  --color-accent-200: #fcd9c2;
+  --color-accent-300: #f6a06b;
+  --color-accent-400: #de8a4e;
+  --color-accent-500: #c67139;
+  --color-accent-600: #b2622d;
+  --color-accent-700: #8c491a;
+  --color-accent-800: #6b3711;
+  --color-accent-900: #45230a;
+
+  /* Accent-2 ramp (sage) */
+  --color-accent-2-100: #f0f3e9;
+  --color-accent-2-200: #d9e0c7;
+  --color-accent-2-300: #b3c095;
+  --color-accent-2-400: #97a878;
+  --color-accent-2-500: #7a8a5e;
+  --color-accent-2-600: #68774e;
+  --color-accent-2-700: #4e5c38;
+  --color-accent-2-800: #3a4628;
+  --color-accent-2-900: #232c17;
 
   /* Type */
-  --font-display: 'Fraunces', Georgia, serif;
-  --font-body: 'Inter', system-ui, sans-serif;
+  --font-heading: 'Fraunces', Georgia, serif;
+  --font-body: 'Figtree', system-ui, sans-serif;
   --font-data: 'IBM Plex Mono', 'Courier New', monospace;
+
+  /* Space — 1.10x density */
+  --space-1: 4px;
+  --space-2: 9px;
+  --space-3: 13px;
+  --space-4: 18px;
+  --space-5: 26px;
+  --space-6: 35px;
+  --space-7: 53px;
+
+  /* Radius — over-round */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 28px;
+  --radius-pill: 999px;
+
+  --shadow-sm: 0 1px 2px rgba(46, 43, 37, 0.14);
+  --shadow-md: 0 3px 10px rgba(46, 43, 37, 0.16);
+  --shadow-lg: 0 12px 32px rgba(46, 43, 37, 0.18);
+
+  /* Back-compat aliases for the existing app.css */
+  --paper: var(--color-bg);
+  --paper-dim: var(--color-neutral-200);
+  --ink: var(--color-text);
+  --ink-soft: var(--color-text-soft);
+  --sage: var(--color-accent-2);
+  --rust: var(--color-accent);
+  --line: var(--color-border);
+  --font-display: var(--font-heading);
 
   color-scheme: light;
 }
@@ -24,21 +91,40 @@
 
 body {
   margin: 0;
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--color-bg);
+  color: var(--color-text);
   font-family: var(--font-body);
 }
 
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.12;
+}
+
 a {
-  color: inherit;
+  color: var(--color-accent-700);
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: var(--color-accent-600);
 }
 
 button {
   font-family: inherit;
 }
 
+::selection {
+  background: var(--color-accent-200);
+}
+
 :focus-visible {
-  outline: 2px solid var(--sage);
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 

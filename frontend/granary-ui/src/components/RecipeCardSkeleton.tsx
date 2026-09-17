@@ -1,3 +1,4 @@
+
 export function RecipeCardSkeleton() {
   return (
     <article className="recipe-card is-skeleton" aria-hidden="true">
@@ -23,7 +24,6 @@ export function RecipeCardSkeleton() {
     </article>
   );
 }
-
 
 export function RecipeListSkeleton({
   count = 6,
