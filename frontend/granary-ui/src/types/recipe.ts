@@ -48,4 +48,14 @@ export interface RecipeResponseDto {
   prepTime?: string;
   ownerUsername?: string;
   updated?: string;
+  bookmarkCount?: number;
+}
+
+// Mirrors com.example.granary.dto.PageResponseDto
+export interface PageResponseDto<T> {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
 }

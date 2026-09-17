@@ -23,10 +23,13 @@ import com.example.granary.business.CommentService;
 import com.example.granary.business.RecipeService;
 import com.example.granary.dto.CommentRequestDto;
 import com.example.granary.dto.CommentResponseDto;
+import com.example.granary.dto.PageResponseDto;
 import com.example.granary.dto.RecipeRequestDto;
 import com.example.granary.dto.RecipeResponseDto;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -36,16 +39,21 @@ import lombok.RequiredArgsConstructor;
 public class RecipeController {
 
     private static final int POPULAR_RECIPES_LIMIT = 8;
+    private static final String DEFAULT_PAGE = "0";
+    private static final String DEFAULT_PAGE_SIZE = "20";
+    private static final int MAX_PAGE_SIZE = 100;
 
     private final RecipeService recipeService;
     private final CommentService commentService;
     private final BookmarkService bookmarkService;
 
 
-    // GET all recipes
+    // GET all recipes, paginated and sorted by bookmark count descending (most-bookmarked first)
     @GetMapping
-    public ResponseEntity<List<RecipeResponseDto>> getAllRecipes() {
-        return ResponseEntity.ok(recipeService.getAll());
+    public ResponseEntity<PageResponseDto<RecipeResponseDto>> getAllRecipes(
+            @RequestParam(defaultValue = DEFAULT_PAGE) @Min(0) int page,
+            @RequestParam(defaultValue = DEFAULT_PAGE_SIZE) @Min(1) @Max(MAX_PAGE_SIZE) int size) {
+        return ResponseEntity.ok(PageResponseDto.of(recipeService.getAll(page, size)));
     }
 
 
@@ -61,13 +69,6 @@ public class RecipeController {
     @GetMapping("/{id}")
     public ResponseEntity<RecipeResponseDto> getRecipeById(@PathVariable Long id) {
         return ResponseEntity.ok(recipeService.getById(id));
-    }
-
-
-    // GET the most-bookmarked recipes (public -- covered by the class-level GET permitAll rule)
-    @GetMapping("/popular")
-    public ResponseEntity<List<RecipeResponseDto>> getPopularRecipes() {
-        return ResponseEntity.ok(recipeService.getPopular());
     }
 
 

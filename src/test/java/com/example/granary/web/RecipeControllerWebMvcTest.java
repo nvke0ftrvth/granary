@@ -21,6 +21,9 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.jackson2.autoconfigure.Jackson2AutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.access.AccessDeniedException;
@@ -106,12 +109,39 @@ class RecipeControllerWebMvcTest {
     // happy path
 
     @Test
-    void getAllRecipes_returnsOkWithList() throws Exception {
-        when(recipeService.getAll()).thenReturn(List.of(new RecipeResponseDto()));
+    void getAllRecipes_returnsOkWithPagedContent() throws Exception {
+        Pageable pageable = PageRequest.of(0, 20);
+        when(recipeService.getAll(0, 20))
+                .thenReturn(new PageImpl<>(List.of(new RecipeResponseDto()), pageable, 1));
 
         mockMvc.perform(get("/api/recipes"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)));
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(20));
+    }
+
+    @Test
+    void getAllRecipes_passesCustomPageAndSizeParams() throws Exception {
+        Pageable pageable = PageRequest.of(2, 5);
+        when(recipeService.getAll(2, 5)).thenReturn(new PageImpl<>(List.of(), pageable, 0));
+
+        mockMvc.perform(get("/api/recipes").param("page", "2").param("size", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(0)));
+    }
+
+    @Test
+    void getAllRecipes_negativePage_returns400() throws Exception {
+        mockMvc.perform(get("/api/recipes").param("page", "-1"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getAllRecipes_sizeTooLarge_returns400() throws Exception {
+        mockMvc.perform(get("/api/recipes").param("size", "101"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

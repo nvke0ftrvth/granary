@@ -20,6 +20,7 @@ import com.example.granary.dto.RecipeRequestDto;
 import com.example.granary.dto.RegisterRequestDto;
 import com.example.granary.model.Ingredient;
 import com.example.granary.model.Step;
+import com.example.granary.repo.BookmarkRepository;
 import com.example.granary.repo.RecipeImageRepository;
 import com.example.granary.repo.RecipeRepository;
 import com.example.granary.repo.UserRepository;
@@ -41,9 +42,13 @@ public abstract class BaseIntegrationTest {
     @Autowired
     protected UserRepository userRepository;
 
+    @Autowired
+    protected BookmarkRepository bookmarkRepository;
+
 
     @BeforeEach
     void clearDatabase() {
+        bookmarkRepository.deleteAll();
         recipeImageRepository.deleteAll();
         recipeRepository.deleteAll();
         userRepository.deleteAll();

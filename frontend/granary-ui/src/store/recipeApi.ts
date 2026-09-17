@@ -1,6 +1,13 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { RecipeRequestDto, RecipeResponseDto } from '../types/recipe';
+import type { PageResponseDto, RecipeRequestDto, RecipeResponseDto } from '../types/recipe';
 import type { RootState } from './index';
+
+export const DEFAULT_RECIPES_PAGE_SIZE = 20;
+
+export interface GetRecipesParams {
+  page?: number;
+  size?: number;
+}
 
 export const recipeApi = createApi({
   reducerPath: 'recipeApi',
@@ -16,12 +23,15 @@ export const recipeApi = createApi({
   }),
   tagTypes: ['Recipe'],
   endpoints: (builder) => ({
-    getRecipes: builder.query<RecipeResponseDto[], void>({
-      query: () => '',
+    getRecipes: builder.query<PageResponseDto<RecipeResponseDto>, GetRecipesParams | void>({
+      query: (params) => ({
+        url: '',
+        params: { page: params?.page ?? 0, size: params?.size ?? DEFAULT_RECIPES_PAGE_SIZE },
+      }),
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ id }) => ({ type: 'Recipe' as const, id })),
+              ...result.content.map(({ id }) => ({ type: 'Recipe' as const, id })),
               { type: 'Recipe', id: 'LIST' },
             ]
           : [{ type: 'Recipe', id: 'LIST' }],
@@ -49,16 +59,6 @@ export const recipeApi = createApi({
     getRecipeById: builder.query<RecipeResponseDto, number>({
       query: (id) => `/${id}`,
       providesTags: (_result, _error, id) => [{ type: 'Recipe', id }],
-    }),
-    getPopularRecipes: builder.query<RecipeResponseDto[], void>({
-      query: () => '/popular',
-      providesTags: (result) =>
-        result
-          ? [
-              ...result.map(({ id }) => ({ type: 'Recipe' as const, id })),
-              { type: 'Recipe', id: 'POPULAR' },
-            ]
-          : [{ type: 'Recipe', id: 'POPULAR' }],
     }),
     createRecipe: builder.mutation<RecipeResponseDto, RecipeRequestDto>({
       query: (body) => ({ url: '', method: 'POST', body }),
@@ -95,7 +95,6 @@ export const {
   useGetMyRecipesQuery,
   useGetPopularRecipesQuery,
   useGetRecipeByIdQuery,
-  useGetPopularRecipesQuery,
   useCreateRecipeMutation,
   useUpdateRecipeMutation,
   useUploadImagesMutation,

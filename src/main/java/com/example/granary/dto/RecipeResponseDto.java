@@ -25,5 +25,6 @@ public class RecipeResponseDto {
     private String prepTime;
     private String ownerUsername;
     private LocalDateTime updated;
+    private Long bookmarkCount;
 
 }

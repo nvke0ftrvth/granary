@@ -3,10 +3,11 @@ package com.example.granary.business;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import com.example.granary.model.Recipe;
 import com.example.granary.model.RecipeImage;
 import com.example.granary.model.User;
 import com.example.granary.repo.BookmarkRepository;
+import com.example.granary.repo.BookmarkRepository.BookmarkCountProjection;
 import com.example.granary.repo.CommentRepository;
 import com.example.granary.repo.CommentVoteRepository;
 import com.example.granary.repo.RecipeImageRepository;
@@ -37,7 +39,6 @@ import lombok.extern.slf4j.Slf4j;
 public class RecipeService {
 
     private static final int MAX_IMAGES_PER_RECIPE = 3;
-    private static final int POPULAR_RECIPES_LIMIT = 10;
     private static final long MAX_IMAGE_SIZE_BYTES = 2L * 1024 * 1024; // 2MB
 
     private final RecipeRepository recipeRepository;
@@ -67,12 +68,20 @@ public class RecipeService {
         return recipeMapper.toResponseDto(recipe);
     }
 
-    public List<RecipeResponseDto> getAll() {
-        log.debug("Fetching all recipes");
-        return recipeRepository.findAll()
-                .stream()
-                .map(recipeMapper::toResponseDto)
-                .toList();
+    public Page<RecipeResponseDto> getAll(int page, int size) {
+        log.debug("Fetching recipes page {} (size {}), sorted by bookmark count desc", page, size);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Recipe> recipes = recipeRepository.findAllOrderByBookmarkCountDesc(pageable);
+
+        List<Long> recipeIds = recipes.getContent().stream().map(Recipe::getId).toList();
+        Map<Long, Long> bookmarkCountsById = bookmarkRepository.countByRecipeIdIn(recipeIds).stream()
+                .collect(Collectors.toMap(BookmarkCountProjection::getRecipeId, BookmarkCountProjection::getCount));
+
+        return recipes.map(recipe -> {
+            RecipeResponseDto dto = recipeMapper.toResponseDto(recipe);
+            dto.setBookmarkCount(bookmarkCountsById.getOrDefault(recipe.getId(), 0L));
+            return dto;
+        });
     }
 
     public List<RecipeResponseDto> getByTag(String tag){
@@ -97,19 +106,6 @@ public class RecipeService {
         log.debug("Fetching recipes owned by: {}", username);
         return recipeRepository.findByUserUsername(username)
                 .stream()
-                .map(recipeMapper::toResponseDto)
-                .toList();
-    }
-
-    public List<RecipeResponseDto> getPopular() {
-        log.debug("Fetching popular recipes");
-        List<Long> ids = bookmarkRepository.findMostBookmarkedRecipeIds(PageRequest.of(0, POPULAR_RECIPES_LIMIT));
-        Map<Long, Recipe> recipesById = recipeRepository.findAllById(ids).stream()
-                .collect(Collectors.toMap(Recipe::getId, r -> r));
-
-        return ids.stream()
-                .map(recipesById::get)
-                .filter(Objects::nonNull)
                 .map(recipeMapper::toResponseDto)
                 .toList();
     }
