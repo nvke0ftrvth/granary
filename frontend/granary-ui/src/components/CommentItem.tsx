@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { format } from 'date-fns';
 import type { RootState } from '../store';
@@ -65,7 +66,9 @@ export function CommentItem({ comment, recipeId, depth = 0 }: CommentItemProps) 
   return (
     <div className="comment" style={depth > 0 ? { marginLeft: '1.5rem' } : undefined}>
       <div className="comment-meta">
-        <span className="comment-author">{comment.authorUsername}</span>
+        <Link to={`/users/${comment.authorUsername}`} className="comment-author">
+          {comment.authorUsername}
+        </Link>
         <span className="comment-date">{format(new Date(comment.createdAt), 'yyyy/MM/dd HH:mm')}</span>
       </div>
 

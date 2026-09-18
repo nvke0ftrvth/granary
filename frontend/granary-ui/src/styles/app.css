@@ -27,6 +27,11 @@
   letter-spacing: -0.01em;
 }
 
+.app-logo {
+  color: inherit;
+  text-decoration: none;
+}
+
 .view-toggle {
   display: flex;
   gap: 0.5rem;
@@ -254,11 +259,107 @@
   cursor: not-allowed;
 }
 
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.share-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex-shrink: 0;
+}
+
+.share-btn:hover {
+  border-color: var(--sage);
+  color: var(--sage);
+}
+
+.share-btn.copied {
+  background: var(--sage);
+  border-color: var(--sage);
+  color: var(--paper);
+}
+
 .recipe-card h3 {
   font-family: var(--font-display);
   font-size: 1.4rem;
   font-weight: 400;
   margin: 0;
+}
+
+.recipe-title-btn {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.recipe-title-btn:hover {
+  text-decoration: underline;
+}
+
+.recipe-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.recipe-modal {
+  position: relative;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  max-width: 640px;
+  width: 100%;
+  padding: 2rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.recipe-modal-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.recipe-modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--ink-soft);
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+}
+
+.recipe-modal-close:hover {
+  color: var(--ink);
 }
 
 .recipe-card h4 {
@@ -740,6 +841,11 @@ textarea:focus {
 .comment-author {
   font-weight: 600;
   color: var(--ink);
+  text-decoration: none;
+}
+
+.comment-author:hover {
+  text-decoration: underline;
 }
 
 .comment-date {
