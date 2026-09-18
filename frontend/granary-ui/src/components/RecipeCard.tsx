@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import type { RecipeResponseDto } from '../types/recipe';
 import { format } from 'date-fns';
 import { BookmarkButton } from './BookmarkButton';
+import { ShareButton } from './ShareButton';
 import { CommentSection } from './CommentSection';
+import { RecipeModal } from './RecipeModal';
 interface RecipeCardProps {
   recipe: RecipeResponseDto;
   onEdit?: (recipe: RecipeResponseDto) => void;
@@ -13,6 +15,7 @@ interface RecipeCardProps {
 
 export function RecipeCard({ recipe, onEdit, isOwner, defaultExpanded }: RecipeCardProps) {
   const [expanded, setExpanded] = useState(defaultExpanded ?? false);
+  const [showModal, setShowModal] = useState(false);
 
   return (
     <article className="recipe-card">
@@ -20,8 +23,13 @@ export function RecipeCard({ recipe, onEdit, isOwner, defaultExpanded }: RecipeC
 
       <header className="recipe-card-header">
         <div className="recipe-title-group">
-          <h3>{recipe.title}</h3>
+          <h3>
+            <button type="button" className="recipe-title-btn" onClick={() => setShowModal(true)}>
+              {recipe.title}
+            </button>
+          </h3>
           <BookmarkButton recipeId={recipe.id} />
+          <ShareButton recipeId={recipe.id} />
         </div>
         <div className="recipe-header-right">
           {recipe.tags && recipe.tags.length > 0 && (
@@ -91,7 +99,7 @@ export function RecipeCard({ recipe, onEdit, isOwner, defaultExpanded }: RecipeC
           <button
             type="button"
             className="expand-overlay"
-            onClick={() => setExpanded(true)}
+            onClick={() => setShowModal(true)}
             aria-expanded={false}
           >
             <span className="expand-overlay-label">Click to view full recipe ↓</span>
@@ -107,7 +115,7 @@ export function RecipeCard({ recipe, onEdit, isOwner, defaultExpanded }: RecipeC
 
       {expanded && <CommentSection recipeId={recipe.id} />}
 
-      {onEdit && isOwner && expanded && (
+      {onEdit && isOwner && (
         <button
           className="edit-btn"
           onClick={(e) => {
@@ -119,6 +127,8 @@ export function RecipeCard({ recipe, onEdit, isOwner, defaultExpanded }: RecipeC
           Edit
         </button>
       )}
+
+      {showModal && <RecipeModal recipe={recipe} onClose={() => setShowModal(false)} />}
     </article>
   );
 }

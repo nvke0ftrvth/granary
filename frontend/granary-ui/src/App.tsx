@@ -52,7 +52,9 @@ export default function App() {
     <div className="app-shell">
       <TopProgressBar />
       <header className="app-header">
-        <h1>Granary</h1>
+        <Link to="/" className="app-logo">
+          <h1>Granary</h1>
+        </Link>
 
         <nav className="view-toggle" role="tablist">
           <Link role="tab" aria-selected={isActive('/')} className={isActive('/') ? 'active' : ''} to="/">
