@@ -1,13 +1,17 @@
 package com.example.granary;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
+import com.example.granary.dto.PageResponseDto;
 import com.example.granary.dto.RecipeResponseDto;
 import com.example.granary.web.ApiError;
 
@@ -23,14 +27,20 @@ class RecipeControllerTest extends BaseIntegrationTest {
     // GET — public, no token needed
     // -------------------------
 
+    private ResponseEntity<PageResponseDto<RecipeResponseDto>> getRecipesPage() {
+        return restTemplate.exchange(
+                baseUrl(), HttpMethod.GET, null,
+                new ParameterizedTypeReference<PageResponseDto<RecipeResponseDto>>() {});
+    }
+
     @Test
-    @DisplayName("GET /api/recipes - returns empty list when no recipes exist")
+    @DisplayName("GET /api/recipes - returns empty page when no recipes exist")
     void getAllRecipes_empty() {
-        ResponseEntity<RecipeResponseDto[]> response = restTemplate.getForEntity(
-                baseUrl(), RecipeResponseDto[].class);
+        ResponseEntity<PageResponseDto<RecipeResponseDto>> response = getRecipesPage();
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEmpty();
+        assertThat(response.getBody().getContent()).isEmpty();
+        assertThat(response.getBody().getTotalElements()).isZero();
     }
 
     @Test
@@ -50,11 +60,48 @@ class RecipeControllerTest extends BaseIntegrationTest {
         assertThat(created.getBody()).isNotNull();
         assertThat(created.getBody().getId()).isNotNull();
         // Read without any token
-        ResponseEntity<RecipeResponseDto[]> response = restTemplate.getForEntity(
-                baseUrl(), RecipeResponseDto[].class);
+        ResponseEntity<PageResponseDto<RecipeResponseDto>> response = getRecipesPage();
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).hasSize(1);
+        assertThat(response.getBody().getContent()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("GET /api/recipes - sorts by bookmark count descending and reports it per recipe")
+    void getAllRecipes_sortedByBookmarkCount() {
+        String token = registerAndGetToken("owner");
+
+        ResponseEntity<RecipeResponseDto> lessBookmarked = restTemplate.exchange(
+                baseUrl(), HttpMethod.POST,
+                authEntity(buildRecipeRequest("Less Bookmarked"), token),
+                RecipeResponseDto.class);
+        ResponseEntity<RecipeResponseDto> moreBookmarked = restTemplate.exchange(
+                baseUrl(), HttpMethod.POST,
+                authEntity(buildRecipeRequest("More Bookmarked"), token),
+                RecipeResponseDto.class);
+        Long lessId = lessBookmarked.getBody().getId();
+        Long moreId = moreBookmarked.getBody().getId();
+
+        String otherToken = registerAndGetToken("bookmarker");
+        restTemplate.exchange(
+                baseUrl() + "/" + moreId + "/bookmark", HttpMethod.POST,
+                authEntity(null, otherToken), Void.class);
+        restTemplate.exchange(
+                baseUrl() + "/" + moreId + "/bookmark", HttpMethod.POST,
+                authEntity(null, token), Void.class);
+        restTemplate.exchange(
+                baseUrl() + "/" + lessId + "/bookmark", HttpMethod.POST,
+                authEntity(null, token), Void.class);
+
+        ResponseEntity<PageResponseDto<RecipeResponseDto>> response = getRecipesPage();
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        List<RecipeResponseDto> content = response.getBody().getContent();
+        assertThat(content).hasSize(2);
+        assertThat(content.get(0).getId()).isEqualTo(moreId);
+        assertThat(content.get(0).getBookmarkCount()).isEqualTo(2L);
+        assertThat(content.get(1).getId()).isEqualTo(lessId);
+        assertThat(content.get(1).getBookmarkCount()).isEqualTo(1L);
     }
 
     // -------------------------

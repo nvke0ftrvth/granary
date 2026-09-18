@@ -2,9 +2,6 @@ package com.example.granary.business;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -40,12 +37,7 @@ public class BookmarkService {
     }
 
     public List<RecipeResponseDto> getMostBookmarkedRecipes(int limit) {
-        List<Long> recipeIds = bookmarkRepository.findMostBookmarkedRecipeIds(PageRequest.of(0, limit));
-        Map<Long, Recipe> recipesById = recipeRepository.findAllById(recipeIds).stream()
-                .collect(Collectors.toMap(Recipe::getId, recipe -> recipe));
-        return recipeIds.stream()
-                .map(recipesById::get)
-                .filter(Objects::nonNull)
+        return bookmarkRepository.findMostBookmarked(PageRequest.of(0, limit)).stream()
                 .map(recipeMapper::toResponseDto)
                 .toList();
     }

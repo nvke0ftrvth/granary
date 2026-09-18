@@ -87,6 +87,40 @@
   gap: 1.75rem;
 }
 
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.pagination button {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink-soft);
+  padding: 0.5rem 0.9rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.pagination button:hover:not(:disabled) {
+  border-color: var(--sage);
+  color: var(--ink);
+}
+
+.pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination-status {
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
 .popular-sidebar {
   position: sticky;
   top: 1.5rem;

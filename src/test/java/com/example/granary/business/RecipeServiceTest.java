@@ -23,9 +23,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.example.granary.repo.BookmarkRepository.BookmarkCountProjection;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +41,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -146,23 +153,66 @@ class RecipeServiceTest {
 
     // getAll
     @Test
-    void getAll_empty_returnsEmptyList() {
-        when(recipeRepository.findAll()).thenReturn(List.of());
-        assertThat(recipeService.getAll()).isEmpty();
+    void getAll_empty_returnsEmptyPage() {
+        Pageable pageable = PageRequest.of(0, 20);
+        when(recipeRepository.findAllOrderByBookmarkCountDesc(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(), pageable, 0));
+        when(bookmarkRepository.countByRecipeIdIn(List.of())).thenReturn(List.of());
+
+        Page<RecipeResponseDto> result = recipeService.getAll(0, 20);
+
+        assertThat(result.getContent()).isEmpty();
+        assertThat(result.getTotalElements()).isZero();
     }
 
     @Test
     void getAll_mapsEveryRecipe() {
         Recipe second = new Recipe();
         second.setId(2L);
-        when(recipeRepository.findAll()).thenReturn(List.of(recipe, second));
+        Pageable pageable = PageRequest.of(0, 20);
+        when(recipeRepository.findAllOrderByBookmarkCountDesc(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(recipe, second), pageable, 2));
         when(recipeMapper.toResponseDto(any(Recipe.class))).thenReturn(new RecipeResponseDto());
+        when(bookmarkRepository.countByRecipeIdIn(List.of(1L, 2L))).thenReturn(List.of());
 
-        assertThat(recipeService.getAll()).hasSize(2);
+        Page<RecipeResponseDto> result = recipeService.getAll(0, 20);
+
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getTotalElements()).isEqualTo(2);
         verify(recipeMapper, times(2)).toResponseDto(any());
     }
 
-    // getByTag
+    @Test
+    void getAll_populatesBookmarkCountFromRepository() {
+        Pageable pageable = PageRequest.of(0, 20);
+        when(recipeRepository.findAllOrderByBookmarkCountDesc(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(recipe), pageable, 1));
+        when(recipeMapper.toResponseDto(recipe)).thenReturn(new RecipeResponseDto());
+
+        BookmarkCountProjection projection = mock(BookmarkCountProjection.class);
+        when(projection.getRecipeId()).thenReturn(1L);
+        when(projection.getCount()).thenReturn(3L);
+        when(bookmarkRepository.countByRecipeIdIn(List.of(1L))).thenReturn(List.of(projection));
+
+        Page<RecipeResponseDto> result = recipeService.getAll(0, 20);
+
+        assertThat(result.getContent().get(0).getBookmarkCount()).isEqualTo(3L);
+    }
+
+    @Test
+    void getAll_recipeWithNoBookmarks_defaultsCountToZero() {
+        Pageable pageable = PageRequest.of(0, 20);
+        when(recipeRepository.findAllOrderByBookmarkCountDesc(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(recipe), pageable, 1));
+        when(recipeMapper.toResponseDto(recipe)).thenReturn(new RecipeResponseDto());
+        when(bookmarkRepository.countByRecipeIdIn(List.of(1L))).thenReturn(List.of());
+
+        Page<RecipeResponseDto> result = recipeService.getAll(0, 20);
+
+        assertThat(result.getContent().get(0).getBookmarkCount()).isEqualTo(0L);
+    }
+
+    // -------------------------------------------------------------- getByTag
     @Test
     void getByTag_returnsMatches() {
         when(recipeRepository.findByTagsContaining("breakfast")).thenReturn(List.of(recipe));

@@ -16,6 +16,7 @@ public interface RecipeMapper {
     Recipe toEntity(RecipeRequestDto dto);
 
     @Mapping(target = "ownerUsername", source = "user.username")
+    @Mapping(target = "bookmarkCount", ignore = true)
     RecipeResponseDto toResponseDto(Recipe recipe);
 
     RecipeImageDto toImageDto(RecipeImage image);
