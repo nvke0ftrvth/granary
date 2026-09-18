@@ -46,9 +46,6 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
-                // Order matters: this specific rule must come before the general
-                // GET /api/recipes/** permitAll below, or that broader rule would
-                // match first and let /mine through unauthenticated.
                 .requestMatchers(HttpMethod.GET, "/api/recipes/mine").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/recipes/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/users/**").permitAll()
