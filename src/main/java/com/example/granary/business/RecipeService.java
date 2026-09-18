@@ -215,6 +215,8 @@ public class RecipeService {
         Recipe recipe = recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new RecipeNotFoundException(recipeId));
 
+        assertOwnership(recipe, currentUserService.getCurrentUser());
+
         Map<Long, RecipeImage> imageMap = recipe.getImages().stream()
                 .collect(Collectors.toMap(RecipeImage::getId, i -> i));
 

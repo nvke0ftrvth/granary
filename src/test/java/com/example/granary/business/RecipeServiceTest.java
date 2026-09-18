@@ -661,6 +661,7 @@ class RecipeServiceTest {
             recipe.getImages().add(img2);
 
             when(recipeRepository.findById(1L)).thenReturn(Optional.of(recipe));
+            when(currentUserService.getCurrentUser()).thenReturn(owner);
             when(recipeRepository.save(recipe)).thenReturn(recipe);
             when(recipeMapper.toResponseDto(recipe)).thenReturn(new RecipeResponseDto());
 
@@ -671,18 +672,17 @@ class RecipeServiceTest {
         }
 
         @Test
-        void securityGap_nonOwnerCanCurrentlyReorderSomeoneElsesImages() {
-
+        void nonOwner_throwsAccessDeniedAndLeavesOrderUnchanged() {
             RecipeImage img1 = RecipeImage.builder().id(1L).displayOrder(0).build();
             recipe.getImages().add(img1); // owned by `owner`, not the caller
 
             when(recipeRepository.findById(1L)).thenReturn(Optional.of(recipe));
-            when(recipeRepository.save(recipe)).thenReturn(recipe);
-            when(recipeMapper.toResponseDto(recipe)).thenReturn(new RecipeResponseDto());
+            when(currentUserService.getCurrentUser()).thenReturn(otherUser());
 
-            recipeService.reorderImages(1L, List.of(1L));
+            assertThatThrownBy(() -> recipeService.reorderImages(1L, List.of(1L)))
+                    .isInstanceOf(AccessDeniedException.class);
 
-            verifyNoInteractions(currentUserService);
+            verify(recipeRepository, never()).save(any());
             assertThat(img1.getDisplayOrder()).isEqualTo(0);
         }
 
@@ -692,6 +692,7 @@ class RecipeServiceTest {
             recipe.getImages().add(img1);
 
             when(recipeRepository.findById(1L)).thenReturn(Optional.of(recipe));
+            when(currentUserService.getCurrentUser()).thenReturn(owner);
             when(recipeRepository.save(recipe)).thenReturn(recipe);
             when(recipeMapper.toResponseDto(recipe)).thenReturn(new RecipeResponseDto());
 
@@ -714,6 +715,7 @@ class RecipeServiceTest {
             recipe.getImages().add(img1);
 
             when(recipeRepository.findById(1L)).thenReturn(Optional.of(recipe));
+            when(currentUserService.getCurrentUser()).thenReturn(owner);
             when(recipeRepository.save(recipe)).thenReturn(recipe);
             when(recipeMapper.toResponseDto(recipe)).thenReturn(new RecipeResponseDto());
 
