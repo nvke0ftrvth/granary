@@ -1,16 +1,15 @@
 package com.example.granary.dto;
 
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class UserProfileDto {
-    private String username;
+public class UpdateProfileRequestDto {
+
+    @Size(max = 500, message = "Description must be at most 500 characters")
     private String description;
-    private String avatarUrl;
 }

@@ -3,8 +3,10 @@ import { useSelector } from 'react-redux';
 import { useGetMyRecipesQuery } from '../store/recipeApi';
 import { useGetMyBookmarksQuery } from '../store/bookmarkApi';
 import { useGetMyCommentsQuery } from '../store/commentApi';
+import { useGetUserProfileQuery } from '../store/userApi';
 import { RecipeCard } from './RecipeCard';
 import { MyComments } from './MyComments';
+import { ProfileHeader } from './ProfileHeader';
 import type { RootState } from '../store';
 import type { RecipeResponseDto } from '../types/recipe';
 
@@ -18,6 +20,7 @@ export function ProfilePage({ onEdit }: ProfilePageProps) {
   const username = useSelector((state: RootState) => state.auth.username);
   const [tab, setTab] = useState<ProfileTab>('recipes');
 
+  const { data: profile } = useGetUserProfileQuery(username ?? '', { skip: !username });
   const { data: recipes, isLoading: recipesLoading, error: recipesError } = useGetMyRecipesQuery();
   const {
     data: bookmarks,
@@ -37,6 +40,8 @@ export function ProfilePage({ onEdit }: ProfilePageProps) {
   return (
     <div>
       <h2 className="profile-heading">{username}'s profile</h2>
+
+      {profile && <ProfileHeader profile={profile} canEdit />}
 
       <nav className="view-toggle profile-tabs" role="tablist">
         <button
