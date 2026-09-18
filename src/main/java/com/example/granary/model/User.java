@@ -90,8 +90,18 @@ public class User implements UserDetails {
         this.recipes = recipes;
     }
 
+    // Accounts created before roles existed (or via the plain 3-arg constructor)
+    // have a null role column; treat that as USER rather than nulling out authorization.
+    public Role getRole() {
+        return role == null ? Role.USER : role;
+    }
+
+    public boolean isAdmin() {
+        return getRole() == Role.ADMIN;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + getRole().name()));
     }
 }

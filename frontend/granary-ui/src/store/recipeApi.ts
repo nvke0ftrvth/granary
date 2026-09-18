@@ -1,6 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { PageResponseDto, RecipeRequestDto, RecipeResponseDto } from '../types/recipe';
 import type { RootState } from './index';
+import { userApi } from './userApi';
 
 export const DEFAULT_RECIPES_PAGE_SIZE = 20;
 
@@ -87,6 +88,21 @@ export const recipeApi = createApi({
       query: ({ recipeId, imageId }) => ({ url: `/${recipeId}/images/${imageId}`, method: 'DELETE' }),
       invalidatesTags: (_result, _error, { recipeId }) => [{ type: 'Recipe', id: recipeId }],
     }),
+    deleteRecipe: builder.mutation<void, { id: number; ownerUsername?: string }>({
+      query: ({ id }) => ({ url: `/${id}`, method: 'DELETE' }),
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'Recipe', id },
+        { type: 'Recipe', id: 'LIST' },
+        { type: 'Recipe', id: 'MINE' },
+        { type: 'Recipe', id: 'POPULAR' },
+      ],
+      async onQueryStarted({ ownerUsername }, { dispatch, queryFulfilled }) {
+        await queryFulfilled;
+        if (ownerUsername) {
+          dispatch(userApi.util.invalidateTags([{ type: 'UserRecipes', id: ownerUsername }]));
+        }
+      },
+    }),
   }),
 });
 
@@ -99,4 +115,5 @@ export const {
   useUpdateRecipeMutation,
   useUploadImagesMutation,
   useDeleteImageMutation,
+  useDeleteRecipeMutation,
 } = recipeApi;

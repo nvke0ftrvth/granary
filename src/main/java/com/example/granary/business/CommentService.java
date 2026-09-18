@@ -174,7 +174,7 @@ public class CommentService {
     public void delete(Long commentId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment", commentId));
-        assertCommentOwnership(comment, currentUserService.getCurrentUser());
+        assertCanDeleteComment(comment, currentUserService.getCurrentUser());
 
         comment.setDeleted(true);
         comment.setContent(null);
@@ -227,6 +227,14 @@ public class CommentService {
         if (!comment.getUser().getId().equals(currentUser.getId())) {
             throw new AccessDeniedException("You do not have permission to modify this comment");
         }
+    }
+
+    // Deletion (unlike edits) is also open to admins.
+    private void assertCanDeleteComment(Comment comment, User currentUser) {
+        if (currentUser.isAdmin()) {
+            return;
+        }
+        assertCommentOwnership(comment, currentUser);
     }
 
     private int sumVotes(Long commentId) {

@@ -518,10 +518,15 @@
   word-break: break-word;
 }
 
-.edit-btn {
+.recipe-card-actions {
   position: absolute;
   bottom: 1rem;
   right: 1.25rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.edit-btn {
   background: transparent;
   border: 1px solid var(--line);
   color: var(--ink-soft);
@@ -536,6 +541,89 @@
 .edit-btn:hover {
   border-color: var(--rust);
   color: var(--rust);
+}
+
+.delete-btn {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.delete-btn:hover {
+  border-color: var(--rust);
+  background: var(--rust);
+  color: var(--paper);
+}
+
+.confirm-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 200;
+}
+
+.confirm-dialog {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  max-width: 420px;
+  width: 100%;
+  padding: 1.75rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.confirm-dialog h3 {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.25rem;
+}
+
+.confirm-dialog p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.confirm-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.confirm-delete-btn {
+  background: var(--rust);
+  color: var(--paper);
+  border: none;
+  border-radius: 4px;
+  padding: 0.55rem 1.2rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.confirm-delete-btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.confirm-delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* --- Form --- */
