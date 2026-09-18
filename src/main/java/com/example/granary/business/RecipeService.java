@@ -129,7 +129,11 @@ public class RecipeService {
         Recipe existing = recipeRepository.findById(id)
             .orElseThrow(() -> new RecipeNotFoundException(id));
 
-        assertOwnership(existing, currentUserService.getCurrentUser());
+        assertCanDelete(existing, currentUserService.getCurrentUser());
+
+        for (RecipeImage image : existing.getImages()) {
+            imageStorageService.delete(image.getFilename());
+        }
 
         List<Comment> comments = commentRepository.findByRecipeIdOrderByCreatedAtAsc(id);
         if (!comments.isEmpty()) {
@@ -160,6 +164,14 @@ public class RecipeService {
                 "You do not have permission to modify this recipe"
             );
         }
+    }
+
+    // Deletion (unlike edits/uploads) is also open to admins.
+    private void assertCanDelete(Recipe recipe, User currentUser) {
+        if (currentUser.isAdmin()) {
+            return;
+        }
+        assertOwnership(recipe, currentUser);
     }
 
     public RecipeResponseDto uploadImages(Long id, List<MultipartFile> files) throws IllegalArgumentException {
@@ -200,7 +212,7 @@ public class RecipeService {
         Recipe recipe = recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new RecipeNotFoundException(recipeId));
 
-        assertOwnership(recipe, currentUserService.getCurrentUser());
+        assertCanDelete(recipe, currentUserService.getCurrentUser());
 
         RecipeImage image = recipeImageRepository.findByIdAndRecipeId(imageId, recipeId)
             .orElseThrow(() -> new ResourceNotFoundException("Image", imageId));

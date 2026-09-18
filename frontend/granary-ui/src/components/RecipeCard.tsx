@@ -1,11 +1,15 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import type { RecipeResponseDto } from '../types/recipe';
 import { format } from 'date-fns';
+import type { RootState } from '../store';
+import { useDeleteRecipeMutation } from '../store/recipeApi';
 import { BookmarkButton } from './BookmarkButton';
 import { ShareButton } from './ShareButton';
 import { CommentSection } from './CommentSection';
 import { RecipeModal } from './RecipeModal';
+import { ConfirmDialog } from './ConfirmDialog';
 interface RecipeCardProps {
   recipe: RecipeResponseDto;
   onEdit?: (recipe: RecipeResponseDto) => void;
@@ -16,6 +20,16 @@ interface RecipeCardProps {
 export function RecipeCard({ recipe, onEdit, isOwner, defaultExpanded }: RecipeCardProps) {
   const [expanded, setExpanded] = useState(defaultExpanded ?? false);
   const [showModal, setShowModal] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  const isAdmin = useSelector((state: RootState) => state.auth.role) === 'ADMIN';
+  const canDelete = isOwner || isAdmin;
+  const [deleteRecipe, { isLoading: isDeleting }] = useDeleteRecipeMutation();
+
+  const handleDelete = async () => {
+    await deleteRecipe({ id: recipe.id, ownerUsername: recipe.ownerUsername });
+    setConfirmingDelete(false);
+  };
 
   return (
     <article className="recipe-card">
@@ -115,20 +129,48 @@ export function RecipeCard({ recipe, onEdit, isOwner, defaultExpanded }: RecipeC
 
       {expanded && <CommentSection recipeId={recipe.id} />}
 
-      {onEdit && isOwner && (
-        <button
-          className="edit-btn"
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(recipe);
-          }}
-          aria-label={`Edit ${recipe.title}`}
-        >
-          Edit
-        </button>
+      {(onEdit && isOwner || canDelete) && (
+        <div className="recipe-card-actions">
+          {onEdit && isOwner && (
+            <button
+              className="edit-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(recipe);
+              }}
+              aria-label={`Edit ${recipe.title}`}
+            >
+              Edit
+            </button>
+          )}
+          {canDelete && (
+            <button
+              type="button"
+              className="delete-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                setConfirmingDelete(true);
+              }}
+              aria-label={`Delete ${recipe.title}`}
+            >
+              Delete
+            </button>
+          )}
+        </div>
       )}
 
       {showModal && <RecipeModal recipe={recipe} onClose={() => setShowModal(false)} />}
+
+      {confirmingDelete && (
+        <ConfirmDialog
+          title="Delete this recipe?"
+          message="This will permanently delete the recipe, its images, and all of its comments. This action cannot be undone."
+          confirmLabel={isDeleting ? 'Deleting…' : 'Delete'}
+          confirmDisabled={isDeleting}
+          onConfirm={handleDelete}
+          onCancel={() => setConfirmingDelete(false)}
+        />
+      )}
     </article>
   );
 }

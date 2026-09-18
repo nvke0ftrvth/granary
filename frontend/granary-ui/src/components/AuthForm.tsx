@@ -29,7 +29,7 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
         ? await register({ username: username.trim(), email: email.trim(), password }).unwrap()
         : await login({ username: username.trim(), password }).unwrap();
 
-      dispatch(setCredentials({ token: result.token, username: result.username }));
+      dispatch(setCredentials({ token: result.token, username: result.username, role: result.role }));
       onSuccess?.();
     } catch {
       // error surfaced below via the `error` state

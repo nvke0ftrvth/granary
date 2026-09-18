@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import com.example.granary.model.Role;
 import com.example.granary.model.User;
 import com.example.granary.repo.UserRepository;
 
@@ -34,6 +35,17 @@ public class DevDataSeeder implements CommandLineRunner {
                         passwordEncoder.encode("dev-password-not-for-prod"));
                 userRepository.save(devUser);
                 log.info("Dev seed: created testuser");
+            }
+        );
+
+        userRepository.findByUsername("testadmin").ifPresentOrElse(
+            user -> log.debug("Dev seed: testadmin already exists"),
+            () -> {
+                User devAdmin = new User("testadmin", "testadmin@example.com",
+                        passwordEncoder.encode("dev-password-not-for-prod"));
+                devAdmin.setRole(Role.ADMIN);
+                userRepository.save(devAdmin);
+                log.info("Dev seed: created testadmin");
             }
         );
     }

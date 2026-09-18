@@ -11,6 +11,7 @@ import {
   useUpdateCommentMutation,
   useCreateCommentMutation,
 } from '../store/commentApi';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface CommentItemProps {
   comment: CommentResponseDto;
@@ -20,8 +21,10 @@ interface CommentItemProps {
 
 export function CommentItem({ comment, recipeId, depth = 0 }: CommentItemProps) {
   const username = useSelector((state: RootState) => state.auth.username);
+  const isAdmin = useSelector((state: RootState) => state.auth.role) === 'ADMIN';
   const isLoggedIn = Boolean(username);
   const isOwner = username != null && username === comment.authorUsername;
+  const canDelete = isOwner || isAdmin;
 
   const [voteComment] = useVoteCommentMutation();
   const [removeVote] = useRemoveVoteMutation();
@@ -33,6 +36,7 @@ export function CommentItem({ comment, recipeId, depth = 0 }: CommentItemProps) 
   const [replyText, setReplyText] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(comment.content);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const handleVote = (value: 1 | -1) => {
     if (comment.currentUserVote === value) {
@@ -58,9 +62,8 @@ export function CommentItem({ comment, recipeId, depth = 0 }: CommentItemProps) 
   };
 
   const handleDelete = () => {
-    if (window.confirm('Delete this comment?')) {
-      deleteComment({ id: comment.id, recipeId });
-    }
+    deleteComment({ id: comment.id, recipeId });
+    setConfirmingDelete(false);
   };
 
   return (
@@ -118,16 +121,30 @@ export function CommentItem({ comment, recipeId, depth = 0 }: CommentItemProps) 
         )}
 
         {isOwner && !comment.deleted && (
-          <>
-            <button type="button" className="comment-link-btn" onClick={() => setIsEditing((v) => !v)}>
-              Edit
-            </button>
-            <button type="button" className="comment-link-btn comment-delete-btn" onClick={handleDelete}>
-              Delete
-            </button>
-          </>
+          <button type="button" className="comment-link-btn" onClick={() => setIsEditing((v) => !v)}>
+            Edit
+          </button>
+        )}
+
+        {canDelete && !comment.deleted && (
+          <button
+            type="button"
+            className="comment-link-btn comment-delete-btn"
+            onClick={() => setConfirmingDelete(true)}
+          >
+            Delete
+          </button>
         )}
       </div>
+
+      {confirmingDelete && (
+        <ConfirmDialog
+          title="Delete this comment?"
+          message="This action cannot be undone."
+          onConfirm={handleDelete}
+          onCancel={() => setConfirmingDelete(false)}
+        />
+      )}
 
       {isReplying && (
         <form onSubmit={handleReplySubmit} className="comment-reply-form">

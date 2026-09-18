@@ -38,7 +38,7 @@ public class AuthService {
         log.info("Registered new user: {}", saved.getUsername());
 
         String token = jwtService.generateToken(saved);
-        return new AuthResponseDto(token, saved.getUsername());
+        return new AuthResponseDto(token, saved.getUsername(), saved.getRole().name());
     }
 
     public AuthResponseDto login(LoginRequestDto dto) {
@@ -53,6 +53,6 @@ public class AuthService {
 
         String token = jwtService.generateToken(user);
         log.info("User logged in: {}", user.getUsername());
-        return new AuthResponseDto(token, user.getUsername());
+        return new AuthResponseDto(token, user.getUsername(), user.getRole().name());
     }
 }
