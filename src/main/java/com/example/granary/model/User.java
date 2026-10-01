@@ -45,6 +45,12 @@ public class User implements UserDetails {
     @Column
     private Role role;
 
+    @Column(length = 500)
+    private String description;
+
+    @Column
+    private String avatarFilename;
+
     @OneToMany(mappedBy = "user")
     private List<Recipe> recipes = new ArrayList<>();
 
