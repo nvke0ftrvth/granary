@@ -1,0 +1,8 @@
+target/
+.git/
+uploads/
+frontend/
+.github/
+.vscode/
+.claude/
+scripts/
