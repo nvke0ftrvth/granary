@@ -13,6 +13,7 @@ import com.example.granary.model.User;
 import com.example.granary.repo.BookmarkRepository;
 import com.example.granary.repo.CommentRepository;
 import com.example.granary.repo.CommentVoteRepository;
+import com.example.granary.repo.IngredientSuggestionRepository;
 import com.example.granary.repo.RecipeImageRepository;
 import com.example.granary.repo.RecipeRepository;
 
@@ -56,7 +57,7 @@ import static org.mockito.Mockito.when;
  * Constructor argument order matches RecipeService's field declaration order
  * (Lombok @RequiredArgsConstructor): recipeRepository, currentUserService,
  * recipeMapper, recipeImageRepository, imageStorageService,
- * commentRepository, commentVoteRepository, bookmarkRepository.
+ * commentRepository, commentVoteRepository, bookmarkRepository, suggestionRepository.
  *
  * Note on delete()'s @Transactional: Mockito unit tests can't verify actual
  * transactional atomicity (that requires a real Spring proxy + transaction
@@ -75,6 +76,7 @@ class RecipeServiceTest {
     @Mock private CommentRepository commentRepository;
     @Mock private CommentVoteRepository commentVoteRepository;
     @Mock private BookmarkRepository bookmarkRepository;
+    @Mock private IngredientSuggestionRepository suggestionRepository;
 
     private RecipeService recipeService;
     private Recipe recipe;
@@ -84,7 +86,8 @@ class RecipeServiceTest {
     void setUp() {
         recipeService = new RecipeService(
                 recipeRepository, currentUserService, recipeMapper, recipeImageRepository,
-                imageStorageService, commentRepository, commentVoteRepository, bookmarkRepository);
+                imageStorageService, commentRepository, commentVoteRepository, bookmarkRepository,
+                suggestionRepository);
 
         owner = new User("owner", "owner@test.com", "pw");
         owner.setId(1L);

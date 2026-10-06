@@ -26,26 +26,41 @@ export const commentApi = createApi({
     }),
     createComment: builder.mutation<CommentResponseDto, { recipeId: number; body: CommentRequestDto }>({
       query: ({ recipeId, body }) => ({ url: `recipes/${recipeId}/comments`, method: 'POST', body }),
-      invalidatesTags: (_result, _error, { recipeId }) => [{ type: 'Comment', id: `RECIPE_${recipeId}` }],
+      invalidatesTags: (_result, _error, { recipeId }) => [
+        { type: 'Comment', id: `RECIPE_${recipeId}` },
+        { type: 'Comment', id: 'MINE' },
+      ],
     }),
     updateComment: builder.mutation<
       CommentResponseDto,
       { id: number; recipeId: number; body: CommentRequestDto }
     >({
       query: ({ id, body }) => ({ url: `comments/${id}`, method: 'PUT', body }),
-      invalidatesTags: (_result, _error, { recipeId }) => [{ type: 'Comment', id: `RECIPE_${recipeId}` }],
+      invalidatesTags: (_result, _error, { recipeId }) => [
+        { type: 'Comment', id: `RECIPE_${recipeId}` },
+        { type: 'Comment', id: 'MINE' },
+      ],
     }),
     deleteComment: builder.mutation<void, { id: number; recipeId: number }>({
       query: ({ id }) => ({ url: `comments/${id}`, method: 'DELETE' }),
-      invalidatesTags: (_result, _error, { recipeId }) => [{ type: 'Comment', id: `RECIPE_${recipeId}` }],
+      invalidatesTags: (_result, _error, { recipeId }) => [
+        { type: 'Comment', id: `RECIPE_${recipeId}` },
+        { type: 'Comment', id: 'MINE' },
+      ],
     }),
     voteComment: builder.mutation<CommentResponseDto, { id: number; recipeId: number; value: 1 | -1 }>({
       query: ({ id, value }) => ({ url: `comments/${id}/vote`, method: 'PUT', body: { value } }),
-      invalidatesTags: (_result, _error, { recipeId }) => [{ type: 'Comment', id: `RECIPE_${recipeId}` }],
+      invalidatesTags: (_result, _error, { recipeId }) => [
+        { type: 'Comment', id: `RECIPE_${recipeId}` },
+        { type: 'Comment', id: 'MINE' },
+      ],
     }),
     removeVote: builder.mutation<void, { id: number; recipeId: number }>({
       query: ({ id }) => ({ url: `comments/${id}/vote`, method: 'DELETE' }),
-      invalidatesTags: (_result, _error, { recipeId }) => [{ type: 'Comment', id: `RECIPE_${recipeId}` }],
+      invalidatesTags: (_result, _error, { recipeId }) => [
+        { type: 'Comment', id: `RECIPE_${recipeId}` },
+        { type: 'Comment', id: 'MINE' },
+      ],
     }),
   }),
 });

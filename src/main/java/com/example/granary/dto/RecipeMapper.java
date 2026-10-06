@@ -6,6 +6,7 @@ import org.mapstruct.MappingTarget;
 
 import com.example.granary.model.Recipe;
 import com.example.granary.model.RecipeImage;
+import com.example.granary.model.RecipeIngredient;
 
 @Mapper(componentModel = "spring")
 public interface RecipeMapper {
@@ -14,6 +15,7 @@ public interface RecipeMapper {
     @Mapping(target = "images", ignore = true)
     @Mapping(target = "updated", ignore = true)
     @Mapping(target = "user", ignore = true)
+    @Mapping(target = "ingredients", ignore = true)
     Recipe toEntity(RecipeRequestDto dto);
 
     @Mapping(target = "ownerUsername", source = "user.username")
@@ -22,9 +24,14 @@ public interface RecipeMapper {
 
     RecipeImageDto toImageDto(RecipeImage image);
 
+    @Mapping(target = "suggestionId", source = "suggestion.id")
+    @Mapping(target = "name", source = "suggestion.name")
+    RecipeIngredientResponseDto toRecipeIngredientDto(RecipeIngredient line);
+
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "images", ignore = true)
     @Mapping(target = "updated", ignore = true)
     @Mapping(target = "user", ignore = true)
+    @Mapping(target = "ingredients", ignore = true)
     void updateEntityFromDto(RecipeRequestDto dto, @MappingTarget Recipe recipe);
 }

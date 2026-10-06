@@ -681,9 +681,30 @@ textarea:focus {
 
 .ingredient-row {
   display: grid;
-  grid-template-columns: 5.5rem 8rem 1fr auto;
+  grid-template-columns: 5.5rem 8rem 1fr auto auto;
   gap: 0.5rem;
   align-items: center;
+}
+
+.ing-optional {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ing-optional-tag {
+  margin-left: 0.4rem;
+  padding: 0 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+  text-transform: lowercase;
+  vertical-align: middle;
 }
 
 .ing-quantity,
@@ -1096,6 +1117,15 @@ textarea:focus {
 
 @media (max-width: 480px) {
   .ingredient-row {
-    grid-template-columns: 4.5rem 12rem 1fr auto;
+    grid-template-columns: 4.5rem 1fr auto auto;
+    grid-template-areas:
+      'qty unit optional remove'
+      'name name name name';
   }
+
+  .ing-quantity { grid-area: qty; }
+  .ing-measurement { grid-area: unit; }
+  .ingredient-row .ing-name { grid-area: name; }
+  .ing-optional { grid-area: optional; }
+  .ingredient-row .row-remove { grid-area: remove; }
 }

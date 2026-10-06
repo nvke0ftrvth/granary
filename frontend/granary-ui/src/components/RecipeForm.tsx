@@ -1,9 +1,18 @@
 import { useState } from 'react';
 import { useCreateRecipeMutation, useUpdateRecipeMutation } from '../store/recipeApi';
 import { ImagePanel } from './ImagePanel';
-import type { Ingredient, RecipeResponseDto } from '../types/recipe';
+import { IngredientSuggestionPicker } from './IngredientSuggestionPicker';
+import type { RecipeRequestDto, RecipeResponseDto } from '../types/recipe';
 
-const emptyIngredient: Ingredient = { name: '', measurement: '', quantity: undefined };
+interface IngredientRow {
+  suggestionId?: number;
+  name: string;
+  measurement: string;
+  quantity?: number;
+  optional: boolean;
+}
+
+const emptyIngredient: IngredientRow = { name: '', measurement: '', quantity: undefined, optional: false };
 
 interface RecipeFormProps {
   recipe?: RecipeResponseDto;
@@ -18,9 +27,18 @@ export function RecipeForm({ recipe, onSaved, onCancel }: RecipeFormProps) {
   const [description, setDescription] = useState(recipe?.description ?? '');
   const [tags, setTags] = useState(recipe?.tags?.join(', ') ?? '');
   const [preptime, setPreptime] = useState(recipe?.prepTime ?? '');
-  const [ingredients, setIngredients] = useState<Ingredient[]>(
-    recipe?.ingredients?.length ? recipe.ingredients.map((ing) => ({ ...ing })) : [{ ...emptyIngredient }]
+  const [ingredients, setIngredients] = useState<IngredientRow[]>(
+    recipe?.ingredients?.length
+      ? recipe.ingredients.map((ing) => ({
+          suggestionId: ing.suggestionId,
+          name: ing.name,
+          measurement: ing.measurement ?? '',
+          quantity: ing.quantity,
+          optional: ing.optional,
+        }))
+      : [{ ...emptyIngredient }]
   );
+  const [ingredientError, setIngredientError] = useState<string | null>(null);
   const [steps, setSteps] = useState<string[]>(
     recipe?.steps?.length
       ? [...recipe.steps].sort((a, b) => a.order - b.order).map((s) => s.instruction)
@@ -37,7 +55,7 @@ export function RecipeForm({ recipe, onSaved, onCancel }: RecipeFormProps) {
     el.style.height = `${el.scrollHeight}px`;
   };
 
-  const updateIngredient = (index: number, patch: Partial<Ingredient>) => {
+  const updateIngredient = (index: number, patch: Partial<IngredientRow>) => {
     setIngredients((prev) => prev.map((ing, i) => (i === index ? { ...ing, ...patch } : ing)));
   };
 
@@ -51,22 +69,32 @@ export function RecipeForm({ recipe, onSaved, onCancel }: RecipeFormProps) {
     setTags('');
     setPreptime('');
     setIngredients([{ ...emptyIngredient }]);
+    setIngredientError(null);
     setSteps(['']);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const payload = {
+    const filled = ingredients.filter((ing) => ing.name.trim());
+    const unmatched = filled.filter((ing) => ing.suggestionId == null);
+    if (unmatched.length > 0) {
+      setIngredientError(
+        `Pick ${unmatched.map((ing) => `"${ing.name.trim()}"`).join(', ')} from the ingredient suggestions.`
+      );
+      return;
+    }
+    setIngredientError(null);
+
+    const payload: RecipeRequestDto = {
       title: title.trim(),
       description: description.trim() || undefined,
-      ingredients: ingredients
-        .filter((ing) => ing.name.trim())
-        .map((ing) => ({
-          name: ing.name.trim(),
-          measurement: ing.measurement?.trim() || undefined,
-          quantity: ing.quantity,
-        })),
+      ingredients: filled.map((ing) => ({
+        suggestionId: ing.suggestionId!,
+        measurement: ing.measurement.trim() || undefined,
+        quantity: ing.quantity,
+        optional: ing.optional,
+      })),
       steps: steps
         .map((s) => s.trim())
         .filter(Boolean)
@@ -152,12 +180,20 @@ export function RecipeForm({ recipe, onSaved, onCancel }: RecipeFormProps) {
               value={ing.measurement}
               onChange={(e) => updateIngredient(i, { measurement: e.target.value })}
             />
-            <input
-              className="ing-name"
-              placeholder="ingredient name"
-              value={ing.name}
-              onChange={(e) => updateIngredient(i, { name: e.target.value })}
+            <IngredientSuggestionPicker
+              listId={`ingredient-options-${i}`}
+              name={ing.name}
+              suggestionId={ing.suggestionId}
+              onChange={(name, suggestionId) => updateIngredient(i, { name, suggestionId })}
             />
+            <label className="ing-optional">
+              <input
+                type="checkbox"
+                checked={ing.optional}
+                onChange={(e) => updateIngredient(i, { optional: e.target.checked })}
+              />
+              optional
+            </label>
             <button
               type="button"
               className="row-remove"
@@ -175,6 +211,7 @@ export function RecipeForm({ recipe, onSaved, onCancel }: RecipeFormProps) {
         >
           + Add ingredient
         </button>
+        {ingredientError && <p className="form-error">{ingredientError}</p>}
       </fieldset>
 
       <fieldset className="field-group">

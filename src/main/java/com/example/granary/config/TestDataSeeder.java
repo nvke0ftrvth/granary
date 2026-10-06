@@ -13,13 +13,15 @@ import org.springframework.stereotype.Component;
 import com.example.granary.model.Bookmark;
 import com.example.granary.model.Comment;
 import com.example.granary.model.CommentVote;
-import com.example.granary.model.Ingredient;
+import com.example.granary.model.IngredientSuggestion;
+import com.example.granary.model.RecipeIngredient;
 import com.example.granary.model.Recipe;
 import com.example.granary.model.Step;
 import com.example.granary.model.User;
 import com.example.granary.repo.BookmarkRepository;
 import com.example.granary.repo.CommentRepository;
 import com.example.granary.repo.CommentVoteRepository;
+import com.example.granary.repo.IngredientSuggestionRepository;
 import com.example.granary.repo.RecipeRepository;
 import com.example.granary.repo.UserRepository;
 
@@ -60,6 +62,7 @@ public class TestDataSeeder implements CommandLineRunner {
     private final CommentRepository commentRepository;
     private final CommentVoteRepository commentVoteRepository;
     private final BookmarkRepository bookmarkRepository;
+    private final IngredientSuggestionRepository suggestionRepository;
     private final PasswordEncoder passwordEncoder;
 
     private int commentCounter = 0;
@@ -379,7 +382,7 @@ public class TestDataSeeder implements CommandLineRunner {
     }
 
     private RecipeEntry entry(List<User> u, int ownerIndex, String title, String description, String prepTime,
-            List<String> tags, List<Ingredient> ingredients, List<Step> steps) {
+            List<String> tags, List<RecipeIngredient> ingredients, List<Step> steps) {
         Recipe recipe = new Recipe(title, u.get(ownerIndex));
         recipe.setDescription(description);
         recipe.setPrepTime(prepTime);
@@ -395,8 +398,10 @@ public class TestDataSeeder implements CommandLineRunner {
         return userRepository.save(u);
     }
 
-    private Ingredient ing(String name, String measurement, String quantity) {
-        return new Ingredient(name, measurement, new BigDecimal(quantity));
+    private RecipeIngredient ing(String name, String measurement, String quantity) {
+        IngredientSuggestion suggestion = suggestionRepository.findFirstByNameIgnoreCase(name)
+                .orElseGet(() -> suggestionRepository.save(new IngredientSuggestion(name)));
+        return new RecipeIngredient(suggestion, measurement, new BigDecimal(quantity));
     }
 
     private Step step(int order, String instruction) {

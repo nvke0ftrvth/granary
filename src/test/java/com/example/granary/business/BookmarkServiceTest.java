@@ -64,7 +64,7 @@ class BookmarkServiceTest {
     @DisplayName("getMyBookmarks - returns empty list when the user has no bookmarks")
     void getMyBookmarks_empty() {
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
-        when(bookmarkRepository.findByUserId(1L)).thenReturn(List.of());
+        when(bookmarkRepository.findByUserIdOrderByCreatedAtDesc(1L)).thenReturn(List.of());
 
         List<RecipeResponseDto> result = bookmarkService.getMyBookmarks();
 
@@ -82,7 +82,7 @@ class BookmarkServiceTest {
         dto.setTitle("Chicken Stir Fry");
 
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
-        when(bookmarkRepository.findByUserId(1L)).thenReturn(List.of(bookmark));
+        when(bookmarkRepository.findByUserIdOrderByCreatedAtDesc(1L)).thenReturn(List.of(bookmark));
         when(recipeMapper.toResponseDto(recipe)).thenReturn(dto);
 
         List<RecipeResponseDto> result = bookmarkService.getMyBookmarks();
