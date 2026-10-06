@@ -132,6 +132,38 @@ class RecipeControllerTest extends BaseIntegrationTest {
         assertThat(response.getBody().getTitle()).isEqualTo("Chicken Stir Fry");
     }
 
+    @Test
+    @DisplayName("Recipe responses expose only the owner's username, and a client-supplied user is ignored")
+    void recipeResponse_doesNotLeakUserDetails() {
+        String token = registerAndGetToken("owner");
+        registerAndGetToken("victim");
+        String body = """
+                {
+                  "title": "Spoofed Owner",
+                  "ingredients": [{"name": "Flour"}],
+                  "steps": [{"instruction": "Mix", "order": 1}],
+                  "user": {"id": 999, "username": "victim", "email": "victim@test.com", "password": "pw"}
+                }
+                """;
+
+        ResponseEntity<String> created = restTemplate.exchange(
+                baseUrl(), HttpMethod.POST, authEntity(body, token), String.class);
+        assertThat(created.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        Long id = recipeRepository.findAll().get(0).getId();
+        ResponseEntity<String> byId = restTemplate.getForEntity(baseUrl() + "/" + id, String.class);
+        ResponseEntity<String> all = restTemplate.getForEntity(baseUrl(), String.class);
+
+        for (ResponseEntity<String> response : List.of(created, byId, all)) {
+            assertThat(response.getBody())
+                    .contains("\"ownerUsername\":\"owner\"")
+                    .doesNotContain("\"password\"")
+                    .doesNotContain("\"email\"")
+                    .doesNotContain("\"recipes\"")
+                    .doesNotContain("\"user\"");
+        }
+    }
+
     // -------------------------
     // PUT — only owner can update
     // -------------------------
