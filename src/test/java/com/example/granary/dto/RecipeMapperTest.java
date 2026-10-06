@@ -60,16 +60,13 @@ class RecipeMapperTest {
     }
 
     @Test
-    void toEntity_doesNotIgnoreUser_soServiceLayerMustOverwriteItOnCreate() {
-
+    void toEntity_leavesUserUnset_soServiceLayerAssignsOwner() {
         RecipeRequestDto dto = new RecipeRequestDto();
         dto.setTitle("Waffles");
-        User spoofedOwner = new User("attacker", "a@test.com", "pw");
-        dto.setUser(spoofedOwner);
 
         Recipe entity = mapper.toEntity(dto);
 
-        assertThat(entity.getUser()).isSameAs(spoofedOwner);
+        assertThat(entity.getUser()).isNull();
     }
 
     // toResponseDto
@@ -136,7 +133,6 @@ class RecipeMapperTest {
         dto.setId(555L); 
         dto.setTitle("New Title");
         dto.setUpdated(LocalDateTime.of(2099, 1, 1, 0, 0)); // must not overwrite
-        dto.setUser(new User("attacker", "a@test.com", "pw")); // must not overwrite
 
         mapper.updateEntityFromDto(dto, existing);
 

@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.example.granary.model.Ingredient;
 import com.example.granary.model.Step;
-import com.example.granary.model.User;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -32,6 +31,5 @@ public class RecipeRequestDto {
     private List<RecipeImageDto> images;
     private List<String> tags;
     private String prepTime;
-    private User user;
     private LocalDateTime updated;
 }

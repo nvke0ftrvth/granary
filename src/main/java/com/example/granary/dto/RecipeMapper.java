@@ -13,6 +13,7 @@ public interface RecipeMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "images", ignore = true)
     @Mapping(target = "updated", ignore = true)
+    @Mapping(target = "user", ignore = true)
     Recipe toEntity(RecipeRequestDto dto);
 
     @Mapping(target = "ownerUsername", source = "user.username")
