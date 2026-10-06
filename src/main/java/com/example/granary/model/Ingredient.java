@@ -2,6 +2,8 @@ package com.example.granary.model;
 
 import java.math.BigDecimal;
 
+import org.hibernate.annotations.ColumnDefault;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Table;
@@ -25,6 +27,16 @@ public class Ingredient {
     @Column(precision = 10, scale = 2)
     private BigDecimal quantity;
 
+    @Column(name = "is_optional", nullable = false)
+    @ColumnDefault("false")
+    private boolean optional;
+
+    public Ingredient(String name, String measurement, BigDecimal quantity) {
+        this.name = name;
+        this.measurement = measurement;
+        this.quantity = quantity;
+    }
+
     public String getName() {
         return name;
     }
@@ -47,5 +59,13 @@ public class Ingredient {
 
     public void setQuantity(BigDecimal quantity) {
         this.quantity = quantity;
+    }
+
+    public boolean isOptional() {
+        return optional;
+    }
+
+    public void setOptional(boolean optional) {
+        this.optional = optional;
     }
 }

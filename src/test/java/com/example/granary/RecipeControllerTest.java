@@ -1,8 +1,10 @@
 package com.example.granary;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
@@ -12,7 +14,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.example.granary.dto.PageResponseDto;
+import com.example.granary.dto.RecipeRequestDto;
 import com.example.granary.dto.RecipeResponseDto;
+import com.example.granary.model.Ingredient;
+import com.example.granary.model.Recipe;
+import com.example.granary.model.Step;
 import com.example.granary.web.ApiError;
 
 @ActiveProfiles("test")
@@ -257,5 +263,79 @@ class RecipeControllerTest extends BaseIntegrationTest {
 
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    // -------------------------
+    // Persistence round-trip
+    // -------------------------
+
+    @Test
+    @DisplayName("POST then GET /api/recipes/{id} - collections, optional flag and prep time are persisted")
+    void createThenGet_persistsAllFields() {
+        String token = registerAndGetToken("owner");
+        RecipeRequestDto request = buildRecipeRequest("Round Trip");
+        Ingredient garnish = new Ingredient("Parsley", "sprig", BigDecimal.ONE);
+        garnish.setOptional(true);
+        request.setIngredients(List.of(request.getIngredients().get(0), garnish));
+        request.setSteps(List.of(new Step("Third", 3), new Step("First", 1), new Step("Second", 2)));
+
+        Long id = restTemplate.exchange(baseUrl(), HttpMethod.POST,
+                authEntity(request, token), RecipeResponseDto.class).getBody().getId();
+
+        RecipeResponseDto fetched = restTemplate.getForEntity(
+                baseUrl() + "/" + id, RecipeResponseDto.class).getBody();
+
+        assertThat(fetched.getIngredients())
+                .extracting(Ingredient::getName, Ingredient::isOptional)
+                .containsExactlyInAnyOrder(
+                        tuple("Ingredient 1", false),
+                        tuple("Parsley", true));
+        assertThat(fetched.getSteps()).extracting(Step::getInstruction)
+                .containsExactly("First", "Second", "Third");
+        assertThat(fetched.getTags()).containsExactlyInAnyOrder("test", "quick");
+        assertThat(fetched.getPrepTime()).isEqualTo("2 Minutes");
+    }
+
+    @Test
+    @DisplayName("PUT then GET /api/recipes/{id} - updated collections replace the old ones")
+    void updateThenGet_persistsReplacedFields() {
+        String token = registerAndGetToken("owner");
+        Long id = restTemplate.exchange(baseUrl(), HttpMethod.POST,
+                authEntity(buildRecipeRequest("Before"), token), RecipeResponseDto.class).getBody().getId();
+
+        RecipeRequestDto update = buildRecipeRequest("After");
+        Ingredient salt = new Ingredient("Salt", "pinch", BigDecimal.ONE);
+        salt.setOptional(true);
+        update.setIngredients(List.of(salt));
+        update.setSteps(List.of(new Step("Only step", 1)));
+        update.setTags(List.of("updated"));
+        update.setPrepTime("45");
+
+        RecipeResponseDto putResponse = restTemplate.exchange(baseUrl() + "/" + id, HttpMethod.PUT,
+                authEntity(update, token), RecipeResponseDto.class).getBody();
+        RecipeResponseDto fetched = restTemplate.getForEntity(
+                baseUrl() + "/" + id, RecipeResponseDto.class).getBody();
+
+        for (RecipeResponseDto dto : List.of(putResponse, fetched)) {
+            assertThat(dto.getIngredients()).extracting(Ingredient::getName).containsExactly("Salt");
+            assertThat(dto.getIngredients().get(0).isOptional()).isTrue();
+            assertThat(dto.getSteps()).extracting(Step::getInstruction).containsExactly("Only step");
+            assertThat(dto.getTags()).containsExactly("updated");
+            assertThat(dto.getPrepTime()).isEqualTo("45");
+        }
+    }
+
+    @Test
+    @DisplayName("RecipeRepository - tag and ingredient-name queries resolve against persisted collections")
+    void repositoryQueries_matchPersistedCollections() {
+        String token = registerAndGetToken("owner");
+        restTemplate.exchange(baseUrl(), HttpMethod.POST,
+                authEntity(buildRecipeRequest("Searchable"), token), RecipeResponseDto.class);
+
+        assertThat(recipeRepository.findByTagsContaining("quick"))
+                .extracting(Recipe::getTitle).containsExactly("Searchable");
+        assertThat(recipeRepository.findByIngredientsNameContainingIgnoreCase("ingredient 2"))
+                .extracting(Recipe::getTitle).containsExactly("Searchable");
+        assertThat(recipeRepository.findByIngredientsNameContainingIgnoreCase("saffron")).isEmpty();
     }
 }
