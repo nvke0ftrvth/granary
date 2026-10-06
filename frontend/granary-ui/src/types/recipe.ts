@@ -9,6 +9,7 @@ export interface Ingredient {
   name: string;
   measurement?: string;
   quantity?: number;
+  optional?: boolean;
 }
 
 // Mirrors com.example.granary.model.Step
@@ -22,7 +23,6 @@ export interface RecipeRequestDto {
   title: string;
   description?: string;
   ingredients: Ingredient[];
-  optionalIngredients?: Ingredient[];
   steps: Step[];
   tags?: string[];
   prepTime?: string;
@@ -41,7 +41,6 @@ export interface RecipeResponseDto {
   title: string;
   description?: string;
   ingredients: Ingredient[];
-  optionalIngredients?: Ingredient[];
   steps: Step[];
   images?: RecipeImage[];
   tags?: string[];

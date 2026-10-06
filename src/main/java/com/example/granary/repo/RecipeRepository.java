@@ -15,7 +15,7 @@ public interface RecipeRepository extends JpaRepository<Recipe, Long> {
     Optional<Recipe> findByTitle(String title);
     List<Recipe> findByUserUsername(String username);
     List<Recipe> findByTagsContaining(String tag);
-    List<Recipe> findByIngredientsContaining(String ingredient);
+    List<Recipe> findByIngredientsNameContainingIgnoreCase(String ingredientName);
     Optional<Recipe> findByDescriptionContaining(String description);
     List<Recipe> findByTitleContainingIgnoreCase(String query);
 
