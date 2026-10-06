@@ -16,11 +16,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.example.granary.dto.AuthResponseDto;
+import com.example.granary.dto.RecipeIngredientRequestDto;
 import com.example.granary.dto.RecipeRequestDto;
 import com.example.granary.dto.RegisterRequestDto;
-import com.example.granary.model.Ingredient;
+import com.example.granary.model.IngredientSuggestion;
 import com.example.granary.model.Step;
 import com.example.granary.repo.BookmarkRepository;
+import com.example.granary.repo.IngredientSuggestionRepository;
 import com.example.granary.repo.RecipeImageRepository;
 import com.example.granary.repo.RecipeRepository;
 import com.example.granary.repo.UserRepository;
@@ -45,12 +47,16 @@ public abstract class BaseIntegrationTest {
     @Autowired
     protected BookmarkRepository bookmarkRepository;
 
+    @Autowired
+    protected IngredientSuggestionRepository suggestionRepository;
+
 
     @BeforeEach
     void clearDatabase() {
         bookmarkRepository.deleteAll();
         recipeImageRepository.deleteAll();
         recipeRepository.deleteAll();
+        suggestionRepository.deleteAll();
         userRepository.deleteAll();
     }
 
@@ -97,15 +103,10 @@ public abstract class BaseIntegrationTest {
     protected int port;
 
     protected RecipeRequestDto buildRecipeRequest(String title) {
-        Ingredient ingredient1 = new Ingredient();
-        ingredient1.setName("Ingredient 1");
-        ingredient1.setQuantity(BigDecimal.valueOf(1.0));
-        ingredient1.setMeasurement("gram");
-
-        Ingredient ingredient2 = new Ingredient();
-        ingredient2.setName("Ingredient 2");
-        ingredient2.setQuantity(BigDecimal.valueOf(2.0));
-        ingredient2.setMeasurement("kilogram");
+        RecipeIngredientRequestDto ingredient1 = new RecipeIngredientRequestDto(
+                suggestionId("Ingredient 1"), "gram", BigDecimal.valueOf(1.0), false);
+        RecipeIngredientRequestDto ingredient2 = new RecipeIngredientRequestDto(
+                suggestionId("Ingredient 2"), "kilogram", BigDecimal.valueOf(2.0), false);
 
         RecipeRequestDto dto = new RecipeRequestDto();
         dto.setTitle(title);
@@ -115,5 +116,11 @@ public abstract class BaseIntegrationTest {
         dto.setTags(List.of("test", "quick"));
         dto.setPrepTime("2 Minutes");
         return dto;
+    }
+
+    protected Long suggestionId(String name) {
+        return suggestionRepository.findFirstByNameIgnoreCase(name)
+                .orElseGet(() -> suggestionRepository.save(new IngredientSuggestion(name)))
+                .getId();
     }
 }

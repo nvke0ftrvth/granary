@@ -65,7 +65,12 @@ export function RecipeModal({ recipe, onClose }: RecipeModalProps) {
                   ing.measurement || null,
                   ing.name,
                 ].filter(Boolean);
-                return <li key={i}>{parts.join(' ')}</li>;
+                return (
+                  <li key={i}>
+                    {parts.join(' ')}
+                    {ing.optional && <span className="ing-optional-tag">optional</span>}
+                  </li>
+                );
               })}
             </ul>
           </section>

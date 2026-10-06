@@ -6,11 +6,11 @@ import com.example.granary.business.RecipeService;
 import com.example.granary.business.UserService;
 import com.example.granary.dto.CommentRequestDto;
 import com.example.granary.dto.CommentResponseDto;
+import com.example.granary.dto.RecipeIngredientRequestDto;
 import com.example.granary.dto.RecipeRequestDto;
 import com.example.granary.dto.RecipeResponseDto;
 import com.example.granary.exceptions.NotLoggedInException;
 import com.example.granary.exceptions.RecipeNotFoundException;
-import com.example.granary.model.Ingredient;
 import com.example.granary.model.Step;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -457,9 +457,7 @@ class RecipeControllerWebMvcTest {
     private RecipeRequestDto validRequestDto() {
         RecipeRequestDto dto = new RecipeRequestDto();
         dto.setTitle("Waffles");
-        Ingredient ingredient = new Ingredient();
-        ingredient.setName("Flour");
-        dto.setIngredients(List.of(ingredient));
+        dto.setIngredients(List.of(new RecipeIngredientRequestDto(1L, "cup", null, false)));
         dto.setSteps(List.of(new Step("Mix", 1), new Step("Cook", 2)));
         return dto;
     }

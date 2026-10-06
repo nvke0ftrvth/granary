@@ -3,13 +3,27 @@ export const MAX_IMAGES_PER_RECIPE = 3;
 export const MAX_IMAGE_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
 export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
-// Mirrors com.example.granary.model.Ingredient
-export interface Ingredient {
-  id?: number;
+// Mirrors com.example.granary.dto.IngredientSuggestionDto
+export interface IngredientSuggestion {
+  id: number;
   name: string;
+}
+
+// Mirrors com.example.granary.dto.RecipeIngredientRequestDto
+export interface RecipeIngredientRequest {
+  suggestionId: number;
   measurement?: string;
   quantity?: number;
   optional?: boolean;
+}
+
+// Mirrors com.example.granary.dto.RecipeIngredientResponseDto
+export interface RecipeIngredient {
+  suggestionId: number;
+  name: string;
+  measurement?: string;
+  quantity?: number;
+  optional: boolean;
 }
 
 // Mirrors com.example.granary.model.Step
@@ -22,7 +36,7 @@ export interface Step {
 export interface RecipeRequestDto {
   title: string;
   description?: string;
-  ingredients: Ingredient[];
+  ingredients: RecipeIngredientRequest[];
   steps: Step[];
   tags?: string[];
   prepTime?: string;
@@ -40,7 +54,7 @@ export interface RecipeResponseDto {
   id: number;
   title: string;
   description?: string;
-  ingredients: Ingredient[];
+  ingredients: RecipeIngredient[];
   steps: Step[];
   images?: RecipeImage[];
   tags?: string[];

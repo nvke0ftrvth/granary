@@ -14,9 +14,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.example.granary.dto.PageResponseDto;
+import com.example.granary.dto.RecipeIngredientRequestDto;
+import com.example.granary.dto.RecipeIngredientResponseDto;
 import com.example.granary.dto.RecipeRequestDto;
 import com.example.granary.dto.RecipeResponseDto;
-import com.example.granary.model.Ingredient;
 import com.example.granary.model.Recipe;
 import com.example.granary.model.Step;
 import com.example.granary.web.ApiError;
@@ -146,11 +147,11 @@ class RecipeControllerTest extends BaseIntegrationTest {
         String body = """
                 {
                   "title": "Spoofed Owner",
-                  "ingredients": [{"name": "Flour"}],
+                  "ingredients": [{"suggestionId": %d}],
                   "steps": [{"instruction": "Mix", "order": 1}],
                   "user": {"id": 999, "username": "victim", "email": "victim@test.com", "password": "pw"}
                 }
-                """;
+                """.formatted(suggestionId("Flour"));
 
         ResponseEntity<String> created = restTemplate.exchange(
                 baseUrl(), HttpMethod.POST, authEntity(body, token), String.class);
@@ -274,8 +275,8 @@ class RecipeControllerTest extends BaseIntegrationTest {
     void createThenGet_persistsAllFields() {
         String token = registerAndGetToken("owner");
         RecipeRequestDto request = buildRecipeRequest("Round Trip");
-        Ingredient garnish = new Ingredient("Parsley", "sprig", BigDecimal.ONE);
-        garnish.setOptional(true);
+        RecipeIngredientRequestDto garnish = new RecipeIngredientRequestDto(
+                suggestionId("Parsley"), "sprig", BigDecimal.ONE, true);
         request.setIngredients(List.of(request.getIngredients().get(0), garnish));
         request.setSteps(List.of(new Step("Third", 3), new Step("First", 1), new Step("Second", 2)));
 
@@ -286,7 +287,7 @@ class RecipeControllerTest extends BaseIntegrationTest {
                 baseUrl() + "/" + id, RecipeResponseDto.class).getBody();
 
         assertThat(fetched.getIngredients())
-                .extracting(Ingredient::getName, Ingredient::isOptional)
+                .extracting(RecipeIngredientResponseDto::getName, RecipeIngredientResponseDto::isOptional)
                 .containsExactlyInAnyOrder(
                         tuple("Ingredient 1", false),
                         tuple("Parsley", true));
@@ -304,8 +305,8 @@ class RecipeControllerTest extends BaseIntegrationTest {
                 authEntity(buildRecipeRequest("Before"), token), RecipeResponseDto.class).getBody().getId();
 
         RecipeRequestDto update = buildRecipeRequest("After");
-        Ingredient salt = new Ingredient("Salt", "pinch", BigDecimal.ONE);
-        salt.setOptional(true);
+        RecipeIngredientRequestDto salt = new RecipeIngredientRequestDto(
+                suggestionId("Salt"), "pinch", BigDecimal.ONE, true);
         update.setIngredients(List.of(salt));
         update.setSteps(List.of(new Step("Only step", 1)));
         update.setTags(List.of("updated"));
@@ -317,7 +318,7 @@ class RecipeControllerTest extends BaseIntegrationTest {
                 baseUrl() + "/" + id, RecipeResponseDto.class).getBody();
 
         for (RecipeResponseDto dto : List.of(putResponse, fetched)) {
-            assertThat(dto.getIngredients()).extracting(Ingredient::getName).containsExactly("Salt");
+            assertThat(dto.getIngredients()).extracting(RecipeIngredientResponseDto::getName).containsExactly("Salt");
             assertThat(dto.getIngredients().get(0).isOptional()).isTrue();
             assertThat(dto.getSteps()).extracting(Step::getInstruction).containsExactly("Only step");
             assertThat(dto.getTags()).containsExactly("updated");
@@ -334,8 +335,87 @@ class RecipeControllerTest extends BaseIntegrationTest {
 
         assertThat(recipeRepository.findByTagsContaining("quick"))
                 .extracting(Recipe::getTitle).containsExactly("Searchable");
-        assertThat(recipeRepository.findByIngredientsNameContainingIgnoreCase("ingredient 2"))
+        assertThat(recipeRepository.findByIngredientsSuggestionNameContainingIgnoreCase("ingredient 2"))
                 .extracting(Recipe::getTitle).containsExactly("Searchable");
-        assertThat(recipeRepository.findByIngredientsNameContainingIgnoreCase("saffron")).isEmpty();
+        assertThat(recipeRepository.findByIngredientsSuggestionNameContainingIgnoreCase("saffron")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("POST /api/recipes - returns the suggestion name and id for each ingredient line")
+    void create_returnsSuggestionNameAndId() {
+        String token = registerAndGetToken("owner");
+        Long flourId = suggestionId("Unenriched Whole Wheat Flour");
+        RecipeRequestDto request = buildRecipeRequest("Bread");
+        request.setIngredients(List.of(new RecipeIngredientRequestDto(flourId, "cup", BigDecimal.TWO, false)));
+
+        RecipeResponseDto created = restTemplate.exchange(baseUrl(), HttpMethod.POST,
+                authEntity(request, token), RecipeResponseDto.class).getBody();
+
+        assertThat(created.getIngredients()).singleElement().satisfies(line -> {
+            assertThat(line.getSuggestionId()).isEqualTo(flourId);
+            assertThat(line.getName()).isEqualTo("Unenriched Whole Wheat Flour");
+            assertThat(line.getMeasurement()).isEqualTo("cup");
+        });
+    }
+
+    @Test
+    @DisplayName("POST /api/recipes - returns 400 for an unknown suggestion id")
+    void create_unknownSuggestionId_badRequest() {
+        String token = registerAndGetToken("owner");
+        RecipeRequestDto request = buildRecipeRequest("Mystery");
+        request.setIngredients(List.of(new RecipeIngredientRequestDto(999_999L, null, null, false)));
+
+        ResponseEntity<ApiError> response = restTemplate.exchange(baseUrl(), HttpMethod.POST,
+                authEntity(request, token), ApiError.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(recipeRepository.count()).isZero();
+    }
+
+    @Test
+    @DisplayName("POST /api/recipes - returns 400 when an ingredient line has no suggestion id")
+    void create_missingSuggestionId_badRequest() {
+        String token = registerAndGetToken("owner");
+        RecipeRequestDto request = buildRecipeRequest("No Id");
+        request.setIngredients(List.of(new RecipeIngredientRequestDto(null, "cup", BigDecimal.ONE, false)));
+
+        ResponseEntity<ApiError> response = restTemplate.exchange(baseUrl(), HttpMethod.POST,
+                authEntity(request, token), ApiError.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    @DisplayName("POST /api/recipes - optional flag is stored per line and defaults to false when omitted")
+    void create_optionalFlagPerLine() {
+        String token = registerAndGetToken("owner");
+        String body = """
+                {
+                  "title": "Salad",
+                  "ingredients": [
+                    {"suggestionId": %d, "quantity": 1, "measurement": "head"},
+                    {"suggestionId": %d, "optional": true},
+                    {"suggestionId": %d, "optional": false}
+                  ],
+                  "steps": [{"instruction": "Toss", "order": 1}]
+                }
+                """.formatted(suggestionId("Raw Iceberg Lettuce"), suggestionId("Raw Pine Nuts"),
+                        suggestionId("Extra Virgin Olive Oil"));
+
+        ResponseEntity<RecipeResponseDto> created = restTemplate.exchange(
+                baseUrl(), HttpMethod.POST, authEntity(body, token), RecipeResponseDto.class);
+        assertThat(created.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        RecipeResponseDto fetched = restTemplate.getForEntity(
+                baseUrl() + "/" + created.getBody().getId(), RecipeResponseDto.class).getBody();
+
+        for (RecipeResponseDto dto : List.of(created.getBody(), fetched)) {
+            assertThat(dto.getIngredients())
+                    .extracting(RecipeIngredientResponseDto::getName, RecipeIngredientResponseDto::isOptional)
+                    .containsExactlyInAnyOrder(
+                            tuple("Raw Iceberg Lettuce", false),
+                            tuple("Raw Pine Nuts", true),
+                            tuple("Extra Virgin Olive Oil", false));
+        }
     }
 }

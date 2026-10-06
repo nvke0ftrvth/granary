@@ -31,7 +31,7 @@ public class BookmarkService {
 
     public List<RecipeResponseDto> getMyBookmarks() {
         User currentUser = currentUserService.getCurrentUser();
-        return bookmarkRepository.findByUserId(currentUser.getId()).stream()
+        return bookmarkRepository.findByUserIdOrderByCreatedAtDesc(currentUser.getId()).stream()
                 .map(b -> recipeMapper.toResponseDto(b.getRecipe()))
                 .toList();
     }
