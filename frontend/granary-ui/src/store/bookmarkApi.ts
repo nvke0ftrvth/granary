@@ -1,20 +1,11 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
 import type { RecipeResponseDto } from '../types/recipe';
-import type { RootState } from './index';
+import { authedBaseQuery } from './authedBaseQuery';
 import { recipeApi } from './recipeApi';
 
 export const bookmarkApi = createApi({
   reducerPath: 'bookmarkApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: '/api',
-    prepareHeaders: (headers, { getState }) => {
-      const token = (getState() as RootState).auth.token;
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+  baseQuery: authedBaseQuery('/api'),
   tagTypes: ['Bookmark'],
   endpoints: (builder) => ({
     getMyBookmarks: builder.query<RecipeResponseDto[], void>({

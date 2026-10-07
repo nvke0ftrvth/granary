@@ -844,6 +844,17 @@ textarea:focus {
   margin: 0;
 }
 
+.auth-notice {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: var(--paper-dim);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--rust);
+  border-radius: 3px;
+}
+
 .image-panel {
   border: 1px solid var(--line);
   border-radius: 4px;
