@@ -1,21 +1,12 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
 import type { RecipeResponseDto } from '../types/recipe';
 import type { UserProfileDto } from '../types/user';
-import type { RootState } from './index';
+import { authedBaseQuery } from './authedBaseQuery';
 
 // GETs are public; mutations (profile/avatar edits) require the JWT.
 export const userApi = createApi({
   reducerPath: 'userApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: '/api/users',
-    prepareHeaders: (headers, { getState }) => {
-      const token = (getState() as RootState).auth.token;
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+  baseQuery: authedBaseQuery('/api/users'),
   tagTypes: ['UserProfile', 'UserRecipes'],
   endpoints: (builder) => ({
     getUserProfile: builder.query<UserProfileDto, string>({

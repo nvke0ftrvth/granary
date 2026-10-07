@@ -9,7 +9,8 @@ import { ProfilePage } from './components/ProfilePage';
 import { PublicProfilePage } from './components/PublicProfilePage';
 import { AuthForm } from './components/AuthForm';
 import { RequireAuth } from './components/RequireAuth';
-import { logout } from './store/authSlice';
+import { useEffect, useRef } from 'react';
+import { logout, sessionExpiryHandled } from './store/authSlice';
 import './styles/tokens.css';
 import './styles/app.css';
 import './styles/loading.css';
@@ -35,7 +36,25 @@ export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const username = useSelector((state: RootState) => state.auth.username);
+  const sessionExpired = useSelector((state: RootState) => state.auth.sessionExpired);
   const isLoggedIn = Boolean(username);
+
+  const previousPath = useRef(location.pathname);
+  useEffect(() => {
+    const leftLoginPage = previousPath.current === '/login' && location.pathname !== '/login';
+    previousPath.current = location.pathname;
+    if (!sessionExpired) return;
+
+    if (leftLoginPage) {
+      dispatch(sessionExpiryHandled());
+    } else if (location.pathname !== '/login') {
+      navigate('/login', { replace: true, state: { from: location.pathname } });
+    }
+  }, [sessionExpired, location.pathname, navigate, dispatch]);
+
+  const returnAfterLogin = () => {
+    navigate((location.state as { from?: string } | null)?.from ?? '/');
+  };
 
   const startEditing = (recipe: RecipeResponseDto) => {
     navigate('/edit', { state: { recipe } });
@@ -125,7 +144,7 @@ export default function App() {
               </RequireAuth>
             }
           />
-          <Route path="/login" element={<AuthForm onSuccess={() => navigate('/')} />} />
+          <Route path="/login" element={<AuthForm onSuccess={returnAfterLogin} />} />
           <Route
             path="/profile"
             element={
