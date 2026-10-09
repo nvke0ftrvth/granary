@@ -1,6 +1,6 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
 import type { PageResponseDto, RecipeRequestDto, RecipeResponseDto } from '../types/recipe';
-import type { RootState } from './index';
+import { authedBaseQuery } from './authedBaseQuery';
 import { userApi } from './userApi';
 
 export const DEFAULT_RECIPES_PAGE_SIZE = 20;
@@ -12,16 +12,7 @@ export interface GetRecipesParams {
 
 export const recipeApi = createApi({
   reducerPath: 'recipeApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: '/api/recipes',
-    prepareHeaders: (headers, { getState }) => {
-      const token = (getState() as RootState).auth.token;
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+  baseQuery: authedBaseQuery('/api/recipes'),
   tagTypes: ['Recipe'],
   endpoints: (builder) => ({
     getRecipes: builder.query<PageResponseDto<RecipeResponseDto>, GetRecipesParams | void>({

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import type { RootState } from '../store';
 import { useLoginMutation, useRegisterMutation } from '../store/authApi';
 import { setCredentials } from '../store/authSlice';
 
@@ -16,6 +17,7 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
   const [password, setPassword] = useState('');
 
   const dispatch = useDispatch();
+  const sessionExpired = useSelector((state: RootState) => state.auth.sessionExpired);
   const [login, loginState] = useLoginMutation();
   const [register, registerState] = useRegisterMutation();
 
@@ -49,6 +51,12 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
     <div className="auth-form-wrapper">
       <form className="recipe-form auth-form" onSubmit={handleSubmit}>
         <h2 className="auth-title">{isRegister ? 'Create an account' : 'Welcome back'}</h2>
+
+        {sessionExpired && !isRegister && !error && (
+          <p className="auth-notice" role="status">
+            Your session has expired. Please log in again.
+          </p>
+        )}
 
         <label className="field">
           <span className="field-label">Username</span>

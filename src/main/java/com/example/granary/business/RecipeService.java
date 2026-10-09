@@ -1,8 +1,10 @@
 package com.example.granary.business;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -14,19 +16,23 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.granary.dto.RecipeIngredientRequestDto;
 import com.example.granary.dto.RecipeMapper;
 import com.example.granary.dto.RecipeRequestDto;
 import com.example.granary.dto.RecipeResponseDto;
 import com.example.granary.exceptions.RecipeNotFoundException;
 import com.example.granary.exceptions.ResourceNotFoundException;
 import com.example.granary.model.Comment;
+import com.example.granary.model.IngredientSuggestion;
 import com.example.granary.model.Recipe;
 import com.example.granary.model.RecipeImage;
+import com.example.granary.model.RecipeIngredient;
 import com.example.granary.model.User;
 import com.example.granary.repo.BookmarkRepository;
 import com.example.granary.repo.BookmarkRepository.BookmarkCountProjection;
 import com.example.granary.repo.CommentRepository;
 import com.example.granary.repo.CommentVoteRepository;
+import com.example.granary.repo.IngredientSuggestionRepository;
 import com.example.granary.repo.RecipeImageRepository;
 import com.example.granary.repo.RecipeRepository;
 
@@ -49,9 +55,11 @@ public class RecipeService {
     private final CommentRepository commentRepository;
     private final CommentVoteRepository commentVoteRepository;
     private final BookmarkRepository bookmarkRepository;
+    private final IngredientSuggestionRepository suggestionRepository;
 
     public RecipeResponseDto create(RecipeRequestDto dto){
         Recipe recipe = recipeMapper.toEntity(dto);
+        recipe.setIngredients(resolveIngredients(dto.getIngredients()));
         recipe.setUser(currentUserService.getCurrentUser());
         recipe.setUpdated(LocalDateTime.now());
         Recipe saved = recipeRepository.save(recipe);
@@ -116,6 +124,7 @@ public class RecipeService {
 
         assertOwnership(existing, currentUserService.getCurrentUser());
         recipeMapper.updateEntityFromDto(dto, existing);
+        existing.setIngredients(resolveIngredients(dto.getIngredients()));
         existing.setUpdated(LocalDateTime.now());
         log.info("Recipe with id " + id + " updated");
 
@@ -156,6 +165,29 @@ public class RecipeService {
             .stream()
             .map(recipeMapper::toResponseDto)
             .toList();
+    }
+
+    private List<RecipeIngredient> resolveIngredients(List<RecipeIngredientRequestDto> lines) {
+        if (lines == null) {
+            return new ArrayList<>();
+        }
+        List<Long> ids = lines.stream().map(RecipeIngredientRequestDto::getSuggestionId).distinct().toList();
+        Map<Long, IngredientSuggestion> suggestions = suggestionRepository.findAllById(ids).stream()
+                .collect(Collectors.toMap(IngredientSuggestion::getId, Function.identity()));
+
+        List<Long> unknown = ids.stream().filter(id -> !suggestions.containsKey(id)).toList();
+        if (!unknown.isEmpty()) {
+            throw new IllegalArgumentException("Unknown ingredient suggestion id(s): " + unknown);
+        }
+
+        List<RecipeIngredient> resolved = new ArrayList<>();
+        for (RecipeIngredientRequestDto line : lines) {
+            RecipeIngredient ingredient = new RecipeIngredient(
+                    suggestions.get(line.getSuggestionId()), line.getMeasurement(), line.getQuantity());
+            ingredient.setOptional(Boolean.TRUE.equals(line.getOptional()));
+            resolved.add(ingredient);
+        }
+        return resolved;
     }
 
     private void assertOwnership(Recipe recipe, User currentUser) {

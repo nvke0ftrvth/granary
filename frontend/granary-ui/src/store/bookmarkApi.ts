@@ -1,20 +1,11 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
 import type { RecipeResponseDto } from '../types/recipe';
-import type { RootState } from './index';
+import { authedBaseQuery } from './authedBaseQuery';
 import { recipeApi } from './recipeApi';
 
 export const bookmarkApi = createApi({
   reducerPath: 'bookmarkApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: '/api',
-    prepareHeaders: (headers, { getState }) => {
-      const token = (getState() as RootState).auth.token;
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+  baseQuery: authedBaseQuery('/api'),
   tagTypes: ['Bookmark'],
   endpoints: (builder) => ({
     getMyBookmarks: builder.query<RecipeResponseDto[], void>({
@@ -30,17 +21,29 @@ export const bookmarkApi = createApi({
     addBookmark: builder.mutation<void, number>({
       query: (recipeId) => ({ url: `recipes/${recipeId}/bookmark`, method: 'POST' }),
       invalidatesTags: [{ type: 'Bookmark', id: 'LIST' }],
-      async onQueryStarted(_recipeId, { dispatch, queryFulfilled }) {
+      async onQueryStarted(recipeId, { dispatch, queryFulfilled }) {
         await queryFulfilled;
-        dispatch(recipeApi.util.invalidateTags([{ type: 'Recipe', id: 'POPULAR' }]));
+        dispatch(
+          recipeApi.util.invalidateTags([
+            { type: 'Recipe', id: 'POPULAR' },
+            { type: 'Recipe', id: 'LIST' },
+            { type: 'Recipe', id: recipeId },
+          ])
+        );
       },
     }),
     removeBookmark: builder.mutation<void, number>({
       query: (recipeId) => ({ url: `recipes/${recipeId}/bookmark`, method: 'DELETE' }),
       invalidatesTags: [{ type: 'Bookmark', id: 'LIST' }],
-      async onQueryStarted(_recipeId, { dispatch, queryFulfilled }) {
+      async onQueryStarted(recipeId, { dispatch, queryFulfilled }) {
         await queryFulfilled;
-        dispatch(recipeApi.util.invalidateTags([{ type: 'Recipe', id: 'POPULAR' }]));
+        dispatch(
+          recipeApi.util.invalidateTags([
+            { type: 'Recipe', id: 'POPULAR' },
+            { type: 'Recipe', id: 'LIST' },
+            { type: 'Recipe', id: recipeId },
+          ])
+        );
       },
     }),
   }),

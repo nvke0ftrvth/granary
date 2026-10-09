@@ -681,9 +681,110 @@ textarea:focus {
 
 .ingredient-row {
   display: grid;
-  grid-template-columns: 5.5rem 8rem 1fr auto;
+  grid-template-columns: 5.5rem 8rem 1fr auto auto;
   gap: 0.5rem;
   align-items: center;
+}
+
+.ing-picker {
+  position: relative;
+  min-width: 0;
+}
+
+.ing-picker input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ing-picker-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  margin: 0;
+  padding: 0.3rem 0;
+  list-style: none;
+  max-height: 15rem;
+  overflow-y: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  box-shadow: var(--shadow-md);
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+.ing-picker-list li {
+  padding: 0.45rem 0.8rem;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  border-left: 2px solid transparent;
+  cursor: pointer;
+}
+
+.ing-picker-list li strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.ing-picker-list li.active {
+  background: var(--paper-dim);
+  border-left-color: var(--sage);
+  color: var(--ink);
+}
+
+.ing-optional {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.ing-optional input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  pointer-events: none;
+}
+
+.ing-optional:hover {
+  border-color: var(--sage);
+  color: var(--sage);
+}
+
+.ing-optional:has(input:checked) {
+  background: var(--sage);
+  border-color: var(--sage);
+  color: var(--paper);
+}
+
+.ing-optional:has(input:focus-visible) {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.ing-optional-tag {
+  margin-left: 0.4rem;
+  padding: 0 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+  text-transform: lowercase;
+  vertical-align: middle;
 }
 
 .ing-quantity,
@@ -741,6 +842,17 @@ textarea:focus {
   color: var(--rust);
   font-size: 0.85rem;
   margin: 0;
+}
+
+.auth-notice {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: var(--paper-dim);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--rust);
+  border-radius: 3px;
 }
 
 .image-panel {
@@ -1096,6 +1208,15 @@ textarea:focus {
 
 @media (max-width: 480px) {
   .ingredient-row {
-    grid-template-columns: 4.5rem 12rem 1fr auto;
+    grid-template-columns: 4.5rem 1fr auto auto;
+    grid-template-areas:
+      'qty unit optional remove'
+      'name name name name';
   }
+
+  .ing-quantity { grid-area: qty; }
+  .ing-measurement { grid-area: unit; }
+  .ingredient-row .ing-name { grid-area: name; }
+  .ing-optional { grid-area: optional; }
+  .ingredient-row .row-remove { grid-area: remove; }
 }

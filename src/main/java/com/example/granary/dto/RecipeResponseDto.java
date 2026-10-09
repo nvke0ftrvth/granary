@@ -3,7 +3,6 @@ package com.example.granary.dto;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.example.granary.model.Ingredient;
 import com.example.granary.model.Step;
 
 import lombok.AllArgsConstructor;
@@ -18,7 +17,7 @@ public class RecipeResponseDto {
     private Long id;
     private String title;
     private String description;
-    private List<Ingredient> ingredients;
+    private List<RecipeIngredientResponseDto> ingredients;
     private List<Step> steps;
     private List<RecipeImageDto> images;  // replaces single imageUrl
     private List<String> tags;

@@ -15,12 +15,12 @@ public interface RecipeRepository extends JpaRepository<Recipe, Long> {
     Optional<Recipe> findByTitle(String title);
     List<Recipe> findByUserUsername(String username);
     List<Recipe> findByTagsContaining(String tag);
-    List<Recipe> findByIngredientsNameContainingIgnoreCase(String ingredientName);
+    List<Recipe> findByIngredientsSuggestionNameContainingIgnoreCase(String ingredientName);
     Optional<Recipe> findByDescriptionContaining(String description);
     List<Recipe> findByTitleContainingIgnoreCase(String query);
 
     // All recipes, most-bookmarked first (LEFT JOIN so zero-bookmark recipes are still included)
-    @Query(value = "SELECT r FROM Recipe r LEFT JOIN Bookmark b ON b.recipe = r GROUP BY r ORDER BY COUNT(b) DESC",
+    @Query(value = "SELECT r FROM Recipe r LEFT JOIN Bookmark b ON b.recipe = r GROUP BY r ORDER BY COUNT(b) DESC, r.id DESC",
            countQuery = "SELECT COUNT(r) FROM Recipe r")
     Page<Recipe> findAllOrderByBookmarkCountDesc(Pageable pageable);
 }

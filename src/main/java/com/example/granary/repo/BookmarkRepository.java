@@ -11,12 +11,12 @@ import com.example.granary.model.Bookmark;
 import com.example.granary.model.Recipe;
 
 public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
-    List<Bookmark> findByUserId(Long userId);
+    List<Bookmark> findByUserIdOrderByCreatedAtDesc(Long userId);
     boolean existsByUserIdAndRecipeId(Long userId, Long recipeId);
     void deleteByUserIdAndRecipeId(Long userId, Long recipeId);
     void deleteByRecipeId(Long recipeId);
 
-    @Query("SELECT b.recipe FROM Bookmark b GROUP BY b.recipe ORDER BY COUNT(b) DESC")
+    @Query("SELECT r FROM Bookmark b JOIN b.recipe r GROUP BY r ORDER BY COUNT(b) DESC, r.id DESC")
     List<Recipe> findMostBookmarked(Pageable pageable);
 
     @Query("SELECT b.recipe.id AS recipeId, COUNT(b) AS count FROM Bookmark b " +

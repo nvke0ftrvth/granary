@@ -17,15 +17,25 @@ INSERT INTO recipe_image (id, recipe_id, image_url, filename, display_order) VAL
 (3, 3, '/images/pancakes.jpg',   'pancakes.jpg',   0),
 (4, 3, '/images/pancakes2.jpg',  'pancakes2.jpg',  1);
 
--- Ingredients
-INSERT INTO recipe_ingredients (recipe_id, name, quantity, measurement) VALUES
-(1, '200g spaghetti', '200', 'grams'),
-(1, '100g pancetta', '100', 'grams'),
-(1, '2 large eggs', '2', NULL),
-(1, '50g parmesan', '50', 'grams'),
-(2, '300g chicken breast', '300', 'grams'),
-(2, '2 tbsp soy sauce', '2', 'tbsp'),
-(2, '1 bell pepper', '1', NULL);
+-- Ingredient suggestions
+INSERT INTO ingredient_suggestions (name) VALUES
+('Spaghetti'),
+('Pancetta'),
+('Large Whole Egg'),
+('Grated Parmesan Cheese'),
+('Raw Boneless Skinless Chicken Breast'),
+('Soy Sauce'),
+('Raw Red Bell Peppers');
+
+-- Recipe ingredient lines
+INSERT INTO recipe_ingredients (recipe_id, suggestion_id, quantity, measurement) VALUES
+(1, (SELECT id FROM ingredient_suggestions WHERE name = 'Spaghetti'), 200, 'grams'),
+(1, (SELECT id FROM ingredient_suggestions WHERE name = 'Pancetta'), 100, 'grams'),
+(1, (SELECT id FROM ingredient_suggestions WHERE name = 'Large Whole Egg'), 2, NULL),
+(1, (SELECT id FROM ingredient_suggestions WHERE name = 'Grated Parmesan Cheese'), 50, 'grams'),
+(2, (SELECT id FROM ingredient_suggestions WHERE name = 'Raw Boneless Skinless Chicken Breast'), 300, 'grams'),
+(2, (SELECT id FROM ingredient_suggestions WHERE name = 'Soy Sauce'), 2, 'tbsp'),
+(2, (SELECT id FROM ingredient_suggestions WHERE name = 'Raw Red Bell Peppers'), 1, NULL);
 
 -- Steps
 INSERT INTO recipe_steps (recipe_id, instruction, step_order) VALUES
