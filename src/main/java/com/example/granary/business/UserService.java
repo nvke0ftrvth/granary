@@ -92,7 +92,7 @@ public class UserService implements UserDetailsService {
         return UserProfileDto.builder()
                 .username(user.getUsername())
                 .description(user.getDescription())
-                .avatarUrl(user.getAvatarFilename() == null ? null : "/images/" + user.getAvatarFilename())
+                .avatarUrl(user.getAvatarFilename() == null ? null : imageStorageService.publicUrl(user.getAvatarFilename()))
                 .build();
     }
 

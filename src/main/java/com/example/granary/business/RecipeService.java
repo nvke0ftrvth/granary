@@ -228,7 +228,7 @@ public class RecipeService {
 
             RecipeImage image = RecipeImage.builder()
                     .filename(filename)
-                    .imageUrl("/images/" + filename)
+                    .imageUrl(imageStorageService.publicUrl(filename))
                     .displayOrder(nextOrder++)
                     .recipe(recipe)
                     .build();

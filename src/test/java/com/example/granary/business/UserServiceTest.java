@@ -69,12 +69,13 @@ class UserServiceTest {
         owner.setDescription("Home cook.");
         owner.setAvatarFilename("pic.png");
         when(userRepository.findByUsername("alice")).thenReturn(Optional.of(owner));
+        when(imageStorageService.publicUrl("pic.png")).thenReturn("https://storage.test/granary-images/pic.png");
 
         UserProfileDto profile = userService.getProfile("alice");
 
         assertThat(profile.getUsername()).isEqualTo("alice");
         assertThat(profile.getDescription()).isEqualTo("Home cook.");
-        assertThat(profile.getAvatarUrl()).isEqualTo("/images/pic.png");
+        assertThat(profile.getAvatarUrl()).isEqualTo("https://storage.test/granary-images/pic.png");
     }
 
     @Test
@@ -148,11 +149,12 @@ class UserServiceTest {
         when(userRepository.findByUsername("alice")).thenReturn(Optional.of(owner));
         when(currentUserService.getCurrentUser()).thenReturn(owner);
         when(imageStorageService.store(file)).thenReturn("generated.png");
+        when(imageStorageService.publicUrl("generated.png")).thenReturn("https://storage.test/granary-images/generated.png");
         save(userRepository);
 
         UserProfileDto profile = userService.uploadAvatar("alice", file);
 
-        assertThat(profile.getAvatarUrl()).isEqualTo("/images/generated.png");
+        assertThat(profile.getAvatarUrl()).isEqualTo("https://storage.test/granary-images/generated.png");
     }
 
     @Test
