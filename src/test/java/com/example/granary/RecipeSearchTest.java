@@ -2,6 +2,7 @@ package com.example.granary;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.example.granary.dto.PageResponseDto;
+import com.example.granary.dto.RecipeIngredientRequestDto;
 import com.example.granary.dto.RecipeRequestDto;
 import com.example.granary.dto.RecipeResponseDto;
 import com.example.granary.web.ApiError;
@@ -41,6 +43,18 @@ class RecipeSearchTest extends BaseIntegrationTest {
         RecipeRequestDto request = buildRecipeRequest(title);
         request.setDescription(description);
         request.setTags(List.of(tags));
+        return restTemplate.exchange(baseUrl(), HttpMethod.POST, authEntity(request, token), RecipeResponseDto.class)
+                .getBody();
+    }
+
+    private RecipeResponseDto createWithIngredients(String title, String description, List<String> ingredients,
+            String... tags) {
+        RecipeRequestDto request = buildRecipeRequest(title);
+        request.setDescription(description);
+        request.setTags(List.of(tags));
+        request.setIngredients(ingredients.stream()
+                .map(name -> new RecipeIngredientRequestDto(suggestionId(name), "cup", BigDecimal.ONE, false))
+                .toList());
         return restTemplate.exchange(baseUrl(), HttpMethod.POST, authEntity(request, token), RecipeResponseDto.class)
                 .getBody();
     }
@@ -207,13 +221,121 @@ class RecipeSearchTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/recipes/search - defaults to newest first")
-    void search_defaultSort_newestFirst() {
+    @DisplayName("GET /api/recipes/search - equally relevant recipes are ordered newest first")
+    void search_equalRelevance_newestFirst() {
         create("Soup 1", "Warming", "soup");
         create("Soup 2", "Warming", "soup");
         create("Soup 3", "Warming", "soup");
 
         assertThat(titlesFor("soup")).containsExactly("Soup 3", "Soup 2", "Soup 1");
+    }
+
+    // relevance ranking
+    @Test
+    @DisplayName("GET /api/recipes/search - a title match ranks above a description match")
+    void search_relevance_titleAboveDescription() {
+        create("Pasta bake", "Oven dish", "dinner");
+        create("Oven dish", "Pasta in the oven", "dinner");
+
+        assertThat(titlesFor("pasta")).containsExactly("Pasta bake", "Oven dish");
+    }
+
+    @Test
+    @DisplayName("GET /api/recipes/search - an exact tag ranks above a partial tag")
+    void search_relevance_exactTagAbovePartialTag() {
+        create("Stew", "Hearty", "dinner");
+        create("Casserole", "Hearty", "dinnerparty");
+
+        assertThat(titlesFor("dinner")).containsExactly("Stew", "Casserole");
+    }
+
+    @Test
+    @DisplayName("GET /api/recipes/search - title starting with the word, then whole-word titles, rank higher")
+    void search_relevance_titleStartAndWholeWordBonuses() {
+        create("Pie crust", "Flaky", "baking");
+        create("Pierogi", "Dumplings", "baking");
+        create("Apple pie", "Classic", "baking");
+
+        assertThat(titlesFor("pie")).containsExactly("Pie crust", "Pierogi", "Apple pie");
+    }
+
+    @Test
+    @DisplayName("GET /api/recipes/search - the words in order as a phrase rank above the same words apart")
+    void search_relevance_phraseBonus() {
+        create("Italian pasta", "Quick", "weeknight");
+        create("Pasta italian", "Quick", "weeknight");
+
+        assertThat(titlesFor("italian pasta")).containsExactly("Italian pasta", "Pasta italian");
+    }
+
+    @Test
+    @DisplayName("GET /api/recipes/search - sort=relevance is the default; relevance cannot be sorted ascending")
+    void search_relevance_explicitSort() {
+        create("Pasta bake", "Oven dish", "dinner");
+        create("Oven dish", "Pasta in the oven", "dinner");
+
+        List<String> titles = search("pasta", Map.of("sort", "relevance")).getContent().stream()
+                .map(RecipeResponseDto::getTitle).toList();
+
+        assertThat(titles).containsExactly("Pasta bake", "Oven dish");
+        assertThat(statusFor("pasta", Map.of("sort", "relevance,asc"))).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    @DisplayName("GET /api/recipes/search - sort=updated,desc ignores relevance and lists newest first")
+    void search_sortByUpdated_ignoresRelevance() {
+        create("Pasta bake", "Oven dish", "dinner");
+        create("Oven dish", "Pasta in the oven", "dinner");
+
+        List<String> titles = search("pasta", Map.of("sort", "updated,desc")).getContent().stream()
+                .map(RecipeResponseDto::getTitle).toList();
+
+        assertThat(titles).containsExactly("Oven dish", "Pasta bake");
+    }
+
+    // ingredients
+    @Test
+    @DisplayName("GET /api/recipes/search - matches an ingredient name, including part of a word")
+    void search_matchesIngredient() {
+        createWithIngredients("Weeknight bowl", "Quick", List.of("Raw Boneless Skinless Chicken Breast"), "dinner");
+        create("Salad", "Leaves", "lunch");
+
+        assertThat(titlesFor("chicken")).containsExactly("Weeknight bowl");
+        assertThat(titlesFor("chick")).containsExactly("Weeknight bowl");
+        assertThat(titlesFor("BONELESS")).containsExactly("Weeknight bowl");
+    }
+
+    @Test
+    @DisplayName("GET /api/recipes/search - words can match an ingredient and another field together")
+    void search_multiWord_ingredientAndTitle() {
+        createWithIngredients("Noodle soup", "Warming", List.of("Chicken Stock"), "dinner");
+        createWithIngredients("Noodle soup", "Warming", List.of("Vegetable Stock"), "dinner");
+
+        PageResponseDto<RecipeResponseDto> page = search("chicken soup", Map.of());
+
+        assertThat(page.getContent()).hasSize(1);
+        assertThat(page.getContent().get(0).getIngredients())
+                .anySatisfy(line -> assertThat(line.getName()).isEqualTo("Chicken Stock"));
+    }
+
+    @Test
+    @DisplayName("GET /api/recipes/search - a whole-word ingredient ranks above a partial one, both above description")
+    void search_relevance_ingredientLevels() {
+        create("Side salad", "Goes well with chicken", "side");
+        createWithIngredients("Nugget plate", "Crunchy", List.of("Chickenless Nuggets"), "kids");
+        createWithIngredients("Gravy", "Rich", List.of("Chicken Stock"), "sauce");
+
+        assertThat(titlesFor("chicken")).containsExactly("Gravy", "Nugget plate", "Side salad");
+    }
+
+    @Test
+    @DisplayName("GET /api/recipes/search - an ingredient scores the same as a tag; ties go to the newest")
+    void search_relevance_ingredientSameLevelAsTag() {
+        create("Pesto", "Green sauce", "basil");
+        createWithIngredients("Caprese", "Tomato and mozzarella", List.of("Fresh Basil"), "salad");
+        create("Bruschetta", "Topped with basil", "starter");
+
+        assertThat(titlesFor("basil")).containsExactly("Caprese", "Pesto", "Bruschetta");
     }
 
     @Test

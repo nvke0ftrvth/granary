@@ -87,8 +87,8 @@ public class RecipeController {
     }
 
 
-    // GET recipes where every word of the query appears in the title, description or a tag, paginated
-    // sort is optional: "title" or "updated", optionally followed by ",asc" or ",desc" (default: newest first)
+    // GET recipes where every word of the query appears in the title, description, a tag or an ingredient, paginated
+    // sort is optional: "relevance" (default), or "title"/"updated" optionally followed by ",asc" or ",desc"
     @GetMapping("/search")
     public ResponseEntity<PageResponseDto<RecipeResponseDto>> search(
             @RequestParam @NotBlank String query,

@@ -49,6 +49,7 @@ public class RecipeService {
     private static final int MAX_IMAGES_PER_RECIPE = 3;
     private static final long MAX_IMAGE_SIZE_BYTES = 2L * 1024 * 1024; // 2MB
     private static final Set<String> SEARCH_SORT_FIELDS = Set.of("title", "updated");
+    private static final String RELEVANCE_SORT = "relevance";
 
     private final RecipeRepository recipeRepository;
     private final CurrentUserService currentUserService;
@@ -86,8 +87,9 @@ public class RecipeService {
     }
 
     /**
-     * Recipes where every word of the query appears in the title, description or a tag, paged and sorted by
-     * {@code sort} ("field" or "field,asc|desc" over {@link #SEARCH_SORT_FIELDS}), newest first by default.
+     * Recipes where every word of the query appears in the title, description, a tag or an ingredient, paged.
+     * Ranked by relevance unless {@code sort} names a field ("field" or "field,asc|desc" over
+     * {@link #SEARCH_SORT_FIELDS}).
      */
     public Page<RecipeResponseDto> search(String query, int page, int size, String sort) {
         List<String> words = RecipeSpecifications.searchWords(query);
@@ -95,19 +97,32 @@ public class RecipeService {
             throw new IllegalArgumentException("Search query must not be blank");
         }
         log.debug("Searching recipes for {} (page {}, size {}, sort {})", words, page, size, sort);
-        Pageable pageable = PageRequest.of(page, size, searchSort(sort));
-        return withBookmarkCounts(recipeRepository.findAll(RecipeSpecifications.matchesAllWords(words), pageable));
+
+        Sort fieldSort = searchSort(sort);
+        Page<Recipe> recipes = fieldSort == null
+                ? recipeRepository.findAll(RecipeSpecifications.matchesAllWordsByRelevance(words),
+                        PageRequest.of(page, size))
+                : recipeRepository.findAll(RecipeSpecifications.matchesAllWords(words),
+                        PageRequest.of(page, size, fieldSort));
+        return withBookmarkCounts(recipes);
     }
 
+    /** The Sort for a field sort, or null when results should be ranked by relevance (the default). */
     private static Sort searchSort(String sort) {
         if (sort == null || sort.isBlank()) {
-            return Sort.by(Sort.Order.desc("updated"), Sort.Order.desc("id"));
+            return null;
         }
         String[] parts = sort.split(",", -1);
         String field = parts[0].trim();
+        if (field.equals(RELEVANCE_SORT)) {
+            if (parts.length == 1 || (parts.length == 2 && parts[1].trim().equalsIgnoreCase("desc"))) {
+                return null;
+            }
+            throw new IllegalArgumentException("Relevance can only be sorted descending");
+        }
         if (!SEARCH_SORT_FIELDS.contains(field) || parts.length > 2) {
-            throw new IllegalArgumentException("Cannot sort by '" + sort + "'. Use one of " + SEARCH_SORT_FIELDS
-                    + ", optionally followed by ,asc or ,desc");
+            throw new IllegalArgumentException("Cannot sort by '" + sort + "'. Use " + RELEVANCE_SORT + " or one of "
+                    + SEARCH_SORT_FIELDS + ", optionally followed by ,asc or ,desc");
         }
         Sort.Direction direction = parts.length == 2
                 ? Sort.Direction.fromString(parts[1].trim())
