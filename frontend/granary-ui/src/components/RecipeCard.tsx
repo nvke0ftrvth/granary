@@ -10,6 +10,7 @@ import { ShareButton } from './ShareButton';
 import { CommentSection } from './CommentSection';
 import { RecipeModal } from './RecipeModal';
 import { ConfirmDialog } from './ConfirmDialog';
+import { TagChip } from './TagChip';
 interface RecipeCardProps {
   recipe: RecipeResponseDto;
   onEdit?: (recipe: RecipeResponseDto) => void;
@@ -49,7 +50,9 @@ export function RecipeCard({ recipe, onEdit, isOwner, defaultExpanded }: RecipeC
           {recipe.tags && recipe.tags.length > 0 && (
             <ul className="recipe-tags">
               {recipe.tags.map((tag) => (
-                <li key={tag}>{tag}</li>
+                <li key={tag}>
+                  <TagChip tag={tag} />
+                </li>
               ))}
             </ul>
           )}

@@ -15,7 +15,7 @@ import com.example.granary.model.Recipe;
 public interface RecipeRepository extends JpaRepository<Recipe, Long>, JpaSpecificationExecutor<Recipe> {
     Optional<Recipe> findByTitle(String title);
     List<Recipe> findByUserUsername(String username);
-    List<Recipe> findByTagsContaining(String tag);
+    Page<Recipe> findByTagsContaining(String tag, Pageable pageable);
     List<Recipe> findByIngredientsSuggestionNameContainingIgnoreCase(String ingredientName);
     Optional<Recipe> findByDescriptionContaining(String description);
 
@@ -23,4 +23,13 @@ public interface RecipeRepository extends JpaRepository<Recipe, Long>, JpaSpecif
     @Query(value = "SELECT r FROM Recipe r LEFT JOIN Bookmark b ON b.recipe = r GROUP BY r ORDER BY COUNT(b) DESC, r.id DESC",
            countQuery = "SELECT COUNT(r) FROM Recipe r")
     Page<Recipe> findAllOrderByBookmarkCountDesc(Pageable pageable);
+
+    // How many recipes use each tag name
+    @Query("SELECT t AS tag, COUNT(DISTINCT r.id) AS count FROM Recipe r JOIN r.tags t GROUP BY t")
+    List<TagCountProjection> countRecipesByTag();
+
+    interface TagCountProjection {
+        String getTag();
+        Long getCount();
+    }
 }

@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useCreateRecipeMutation, useUpdateRecipeMutation } from '../store/recipeApi';
 import { ImagePanel } from './ImagePanel';
 import { IngredientSuggestionPicker } from './IngredientSuggestionPicker';
+import { TagPicker } from './TagPicker';
+import { hashtagsIn } from '../utils/tags';
 import type { RecipeRequestDto, RecipeResponseDto } from '../types/recipe';
 
 interface IngredientRow {
@@ -20,12 +22,23 @@ interface RecipeFormProps {
   onCancel?: () => void;
 }
 
+function serverMessage(error: unknown): string | null {
+  if (error && typeof error === 'object' && 'data' in error) {
+    const data = (error as { data?: { message?: unknown } }).data;
+    if (typeof data?.message === 'string') return data.message;
+  }
+  return null;
+}
+
 export function RecipeForm({ recipe, onSaved, onCancel }: RecipeFormProps) {
   const isEditing = Boolean(recipe);
 
   const [title, setTitle] = useState(recipe?.title ?? '');
   const [description, setDescription] = useState(recipe?.description ?? '');
-  const [tags, setTags] = useState(recipe?.tags?.join(', ') ?? '');
+  const [tags, setTags] = useState<string[]>(() => {
+    const fromText = hashtagsIn(recipe?.title ?? '', recipe?.description ?? '');
+    return (recipe?.tags ?? []).filter((tag) => !fromText.includes(tag));
+  });
   const [preptime, setPreptime] = useState(recipe?.prepTime ?? '');
   const [ingredients, setIngredients] = useState<IngredientRow[]>(
     recipe?.ingredients?.length
@@ -66,7 +79,7 @@ export function RecipeForm({ recipe, onSaved, onCancel }: RecipeFormProps) {
   const resetForm = () => {
     setTitle('');
     setDescription('');
-    setTags('');
+    setTags([]);
     setPreptime('');
     setIngredients([{ ...emptyIngredient }]);
     setIngredientError(null);
@@ -100,10 +113,7 @@ export function RecipeForm({ recipe, onSaved, onCancel }: RecipeFormProps) {
         .filter(Boolean)
         .map((instruction, order) => ({ instruction, order })),
       prepTime: preptime.trim() || undefined,
-      tags: tags
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean),
+      tags,
     };
 
     try {
@@ -246,18 +256,20 @@ export function RecipeForm({ recipe, onSaved, onCancel }: RecipeFormProps) {
 
       {isEditing && recipe && <ImagePanel recipeId={recipe.id} />}
 
-      <label className="field">
-        <span className="field-label">Tags</span>
-        <input
-          value={tags}
-          onChange={(e) => setTags(e.target.value)}
-          placeholder="comma, separated, tags"
+      <div className="field">
+        <span className="field-label" id="recipe-tags-label">Tags</span>
+        <TagPicker
+          listId="recipe-tag-options"
+          tags={tags}
+          autoTags={hashtagsIn(title, description)}
+          onChange={setTags}
         />
-      </label>
+      </div>
 
       {error && (
         <p className="form-error">
-          {isEditing ? "Couldn't save changes." : "Couldn't save that recipe."} Check the fields and try again.
+          {isEditing ? "Couldn't save changes." : "Couldn't save that recipe."}{' '}
+          {serverMessage(error) ?? 'Check the fields and try again.'}
         </p>
       )}
 

@@ -28,6 +28,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.multipart.MultipartFile;
@@ -42,6 +43,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -77,6 +79,7 @@ class RecipeServiceTest {
     @Mock private CommentVoteRepository commentVoteRepository;
     @Mock private BookmarkRepository bookmarkRepository;
     @Mock private IngredientSuggestionRepository suggestionRepository;
+    @Mock private TagService tagService;
 
     private RecipeService recipeService;
     private Recipe recipe;
@@ -87,7 +90,7 @@ class RecipeServiceTest {
         recipeService = new RecipeService(
                 recipeRepository, currentUserService, recipeMapper, recipeImageRepository,
                 imageStorageService, commentRepository, commentVoteRepository, bookmarkRepository,
-                suggestionRepository);
+                suggestionRepository, tagService);
 
         owner = new User("owner", "owner@test.com", "pw");
         owner.setId(1L);
@@ -217,17 +220,25 @@ class RecipeServiceTest {
 
     // -------------------------------------------------------------- getByTag
     @Test
-    void getByTag_returnsMatches() {
-        when(recipeRepository.findByTagsContaining("breakfast")).thenReturn(List.of(recipe));
+    void getByTag_looksUpTheNormalizedTag_newestFirst() {
+        when(tagService.normalizeForLookup("#Breakfast")).thenReturn("breakfast");
+        when(recipeRepository.findByTagsContaining(eq("breakfast"), any(Pageable.class)))
+                .thenAnswer(inv -> new PageImpl<>(List.of(recipe), inv.getArgument(1), 1));
         when(recipeMapper.toResponseDto(recipe)).thenReturn(new RecipeResponseDto());
 
-        assertThat(recipeService.getByTag("breakfast")).hasSize(1);
+        Page<RecipeResponseDto> result = recipeService.getByTag("#Breakfast", 0, 20);
+
+        assertThat(result.getContent()).hasSize(1);
+        verify(recipeRepository).findByTagsContaining("breakfast",
+                PageRequest.of(0, 20, Sort.by(Sort.Order.desc("updated"), Sort.Order.desc("id"))));
     }
 
     @Test
-    void getByTag_noMatches_returnsEmptyList() {
-        when(recipeRepository.findByTagsContaining("nope")).thenReturn(List.of());
-        assertThat(recipeService.getByTag("nope")).isEmpty();
+    void getByTag_noMatches_returnsEmptyPage() {
+        when(tagService.normalizeForLookup("nope")).thenReturn("nope");
+        when(recipeRepository.findByTagsContaining(eq("nope"), any(Pageable.class))).thenReturn(Page.empty());
+
+        assertThat(recipeService.getByTag("nope", 0, 20)).isEmpty();
     }
 
     // getMine

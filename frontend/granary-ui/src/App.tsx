@@ -11,6 +11,7 @@ import { AuthForm } from './components/AuthForm';
 import { RequireAuth } from './components/RequireAuth';
 import { SearchBar } from './components/SearchBar';
 import { SearchResultsPage } from './components/SearchResultsPage';
+import { TagPage } from './components/TagPage';
 import { useEffect, useRef } from 'react';
 import { logout, sessionExpiryHandled } from './store/authSlice';
 import './styles/tokens.css';
@@ -163,6 +164,7 @@ export default function App() {
             element={<RecipeFocusPage onEdit={startEditing} currentUsername={username} />}
           />
           <Route path="/users/:username" element={<PublicProfilePage />} />
+          <Route path="/tag/:tag" element={<TagPage onEdit={startEditing} currentUsername={username} />} />
           <Route
             path="/search"
             element={<SearchResultsPage onEdit={startEditing} currentUsername={username} />}
