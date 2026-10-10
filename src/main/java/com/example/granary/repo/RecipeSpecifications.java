@@ -42,14 +42,17 @@ public final class RecipeSpecifications {
     private RecipeSpecifications() {
     }
 
-    /** Splits a search query into at most {@link #MAX_SEARCH_WORDS} lowercased, non-empty words. */
+    /**
+     * Splits a search query into at most {@link #MAX_SEARCH_WORDS} lowercased, non-empty words. A leading # is
+     * dropped so "#vegan" searches like "vegan".
+     */
     public static List<String> searchWords(String query) {
         if (query == null) {
             return List.of();
         }
         return Arrays.stream(query.trim().split("\\s+"))
+                .map(word -> word.replaceFirst("^#+", "").toLowerCase(Locale.ROOT))
                 .filter(word -> !word.isEmpty())
-                .map(word -> word.toLowerCase(Locale.ROOT))
                 .limit(MAX_SEARCH_WORDS)
                 .toList();
     }

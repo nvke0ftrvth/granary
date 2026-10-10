@@ -80,10 +80,13 @@ public class RecipeController {
     }
 
 
-    // GET recipes by category
+    // GET recipes with a tag, newest first, paginated; the tag is case-insensitive and may start with #
     @GetMapping("/tag/{tag}")
-    public ResponseEntity<List<RecipeResponseDto>> getByCategory(@PathVariable String tag) {
-        return ResponseEntity.ok(recipeService.getByTag(tag));
+    public ResponseEntity<PageResponseDto<RecipeResponseDto>> getByTag(
+            @PathVariable String tag,
+            @RequestParam(defaultValue = DEFAULT_PAGE) @Min(0) int page,
+            @RequestParam(defaultValue = DEFAULT_PAGE_SIZE) @Min(1) @Max(MAX_PAGE_SIZE) int size) {
+        return ResponseEntity.ok(PageResponseDto.of(recipeService.getByTag(tag, page, size)));
     }
 
 

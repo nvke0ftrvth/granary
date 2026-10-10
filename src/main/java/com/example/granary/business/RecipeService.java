@@ -60,10 +60,12 @@ public class RecipeService {
     private final CommentVoteRepository commentVoteRepository;
     private final BookmarkRepository bookmarkRepository;
     private final IngredientSuggestionRepository suggestionRepository;
+    private final TagService tagService;
 
     public RecipeResponseDto create(RecipeRequestDto dto){
         Recipe recipe = recipeMapper.toEntity(dto);
         recipe.setIngredients(resolveIngredients(dto.getIngredients()));
+        recipe.setTags(tagService.resolveRecipeTags(dto.getTags(), dto.getTitle(), dto.getDescription()));
         recipe.setUser(currentUserService.getCurrentUser());
         recipe.setUpdated(LocalDateTime.now());
         Recipe saved = recipeRepository.save(recipe);
@@ -142,12 +144,12 @@ public class RecipeService {
         });
     }
 
-    public List<RecipeResponseDto> getByTag(String tag){
-        log.debug("Fetching recipes by tag: {}", tag);
-        return recipeRepository.findByTagsContaining(tag)
-            .stream()
-            .map(recipeMapper::toResponseDto)
-            .toList();
+    /** Recipes carrying the tag, newest first; the tag may be given in any case and with or without a #. */
+    public Page<RecipeResponseDto> getByTag(String tag, int page, int size) {
+        String normalized = tagService.normalizeForLookup(tag);
+        log.debug("Fetching recipes tagged #{} (page {}, size {})", normalized, page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("updated"), Sort.Order.desc("id")));
+        return withBookmarkCounts(recipeRepository.findByTagsContaining(normalized, pageable));
     }
 
     public List<RecipeResponseDto> getMine() {
@@ -175,6 +177,7 @@ public class RecipeService {
         assertOwnership(existing, currentUserService.getCurrentUser());
         recipeMapper.updateEntityFromDto(dto, existing);
         existing.setIngredients(resolveIngredients(dto.getIngredients()));
+        existing.setTags(tagService.resolveRecipeTags(dto.getTags(), dto.getTitle(), dto.getDescription()));
         existing.setUpdated(LocalDateTime.now());
         log.info("Recipe with id " + id + " updated");
 

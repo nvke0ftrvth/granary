@@ -125,7 +125,7 @@ class RecipeSearchTest extends BaseIntegrationTest {
     @Test
     @DisplayName("GET /api/recipes/search - a recipe matching in several fields is returned once")
     void search_multipleMatches_returnedOnce() {
-        create("Pasta bake", "Baked pasta", "pasta", "pasta-night");
+        create("Pasta bake", "Baked pasta", "pasta", "pasta_night");
 
         PageResponseDto<RecipeResponseDto> page = search("pasta", Map.of());
 

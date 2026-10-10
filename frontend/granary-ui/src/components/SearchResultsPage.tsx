@@ -1,9 +1,7 @@
 import { useSearchParams } from 'react-router-dom';
 import { useSearchRecipesQuery } from '../store/recipeApi';
-import { Pagination } from './Pagination';
-import { RecipeCard } from './RecipeCard';
 import { RecipeListSkeleton } from './RecipeCardSkeleton';
-import { MAX_STAGGER } from './RecipeList';
+import { RecipeResults } from './RecipeResults';
 import type { RecipeResponseDto } from '../types/recipe';
 
 interface SearchResultsPageProps {
@@ -45,47 +43,16 @@ export function SearchResultsPage({ onEdit, currentUsername }: SearchResultsPage
 
       {error && <p className="status-message form-error">Couldn't search the recipe box. Try again in a moment.</p>}
 
-      {data && data.content.length === 0 && data.totalElements === 0 && (
-        <p className="status-message">
-          No recipes match every word of “{query}”. Try fewer or different words.
-        </p>
-      )}
-
-      {data && data.content.length === 0 && data.totalElements > 0 && (
-        <p className="status-message">
-          There are no results on this page.{' '}
-          <button type="button" className="row-add" onClick={() => goToPage(0)}>
-            Back to the first page
-          </button>
-        </p>
-      )}
-
-      {data && data.content.length > 0 && (
-        <>
-          <div className="recipe-list">
-            {data.content.map((recipe, i) => (
-              <div
-                key={recipe.id}
-                className="recipe-card-enter"
-                style={{ '--i': Math.min(i, MAX_STAGGER) } as React.CSSProperties}
-              >
-                <RecipeCard
-                  recipe={recipe}
-                  onEdit={onEdit}
-                  isOwner={currentUsername != null && currentUsername === recipe.ownerUsername}
-                />
-              </div>
-            ))}
-          </div>
-
-          <Pagination
-            page={data.page}
-            totalPages={data.totalPages}
-            onPageChange={goToPage}
-            disabled={isFetching}
-            label="Search result pages"
-          />
-        </>
+      {data && (
+        <RecipeResults
+          data={data}
+          isFetching={isFetching}
+          onPageChange={goToPage}
+          emptyMessage={`No recipes match every word of “${query}”. Try fewer or different words.`}
+          pagesLabel="Search result pages"
+          onEdit={onEdit}
+          currentUsername={currentUsername}
+        />
       )}
     </section>
   );

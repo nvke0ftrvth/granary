@@ -1,6 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import type { PageResponseDto, RecipeRequestDto, RecipeResponseDto } from '../types/recipe';
 import { authedBaseQuery } from './authedBaseQuery';
+import { tagApi } from './tagApi';
 import { userApi } from './userApi';
 
 export const DEFAULT_RECIPES_PAGE_SIZE = 20;
@@ -12,6 +13,10 @@ export interface GetRecipesParams {
 
 export interface SearchRecipesParams extends GetRecipesParams {
   query: string;
+}
+
+export interface RecipesByTagParams extends GetRecipesParams {
+  tag: string;
 }
 
 export const recipeApi = createApi({
@@ -36,6 +41,19 @@ export const recipeApi = createApi({
       query: ({ query, page, size }) => ({
         url: '/search',
         params: { query, page: page ?? 0, size: size ?? DEFAULT_RECIPES_PAGE_SIZE },
+      }),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.content.map(({ id }) => ({ type: 'Recipe' as const, id })),
+              { type: 'Recipe', id: 'LIST' },
+            ]
+          : [{ type: 'Recipe', id: 'LIST' }],
+    }),
+    getRecipesByTag: builder.query<PageResponseDto<RecipeResponseDto>, RecipesByTagParams>({
+      query: ({ tag, page, size }) => ({
+        url: `/tag/${encodeURIComponent(tag)}`,
+        params: { page: page ?? 0, size: size ?? DEFAULT_RECIPES_PAGE_SIZE },
       }),
       providesTags: (result) =>
         result
@@ -75,6 +93,14 @@ export const recipeApi = createApi({
         { type: 'Recipe', id: 'LIST' },
         { type: 'Recipe', id: 'MINE' },
       ],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          dispatch(tagApi.util.invalidateTags(['Tag']));
+        } catch {
+          return;
+        }
+      },
     }),
     updateRecipe: builder.mutation<RecipeResponseDto, { id: number; body: RecipeRequestDto }>({
       query: ({ id, body }) => ({ url: `/${id}`, method: 'PUT', body }),
@@ -83,6 +109,14 @@ export const recipeApi = createApi({
         { type: 'Recipe', id: 'LIST' },
         { type: 'Recipe', id: 'MINE' },
       ],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          dispatch(tagApi.util.invalidateTags(['Tag']));
+        } catch {
+          return;
+        }
+      },
     }),
     uploadImages: builder.mutation<RecipeResponseDto, { id: number; files: File[] }>({
       query: ({ id, files }) => {
@@ -106,6 +140,7 @@ export const recipeApi = createApi({
       ],
       async onQueryStarted({ ownerUsername }, { dispatch, queryFulfilled }) {
         await queryFulfilled;
+        dispatch(tagApi.util.invalidateTags(['Tag']));
         if (ownerUsername) {
           dispatch(userApi.util.invalidateTags([{ type: 'UserRecipes', id: ownerUsername }]));
         }
@@ -117,6 +152,7 @@ export const recipeApi = createApi({
 export const {
   useGetRecipesQuery,
   useSearchRecipesQuery,
+  useGetRecipesByTagQuery,
   useGetMyRecipesQuery,
   useGetPopularRecipesQuery,
   useGetRecipeByIdQuery,

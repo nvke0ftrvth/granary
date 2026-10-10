@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.example.granary.dto.PageResponseDto;
+import org.springframework.data.domain.Pageable;
 import com.example.granary.dto.RecipeIngredientRequestDto;
 import com.example.granary.dto.RecipeIngredientResponseDto;
 import com.example.granary.dto.RecipeRequestDto;
@@ -333,7 +334,7 @@ class RecipeControllerTest extends BaseIntegrationTest {
         restTemplate.exchange(baseUrl(), HttpMethod.POST,
                 authEntity(buildRecipeRequest("Searchable"), token), RecipeResponseDto.class);
 
-        assertThat(recipeRepository.findByTagsContaining("quick"))
+        assertThat(recipeRepository.findByTagsContaining("quick", Pageable.unpaged()).getContent())
                 .extracting(Recipe::getTitle).containsExactly("Searchable");
         assertThat(recipeRepository.findByIngredientsSuggestionNameContainingIgnoreCase("ingredient 2"))
                 .extracting(Recipe::getTitle).containsExactly("Searchable");

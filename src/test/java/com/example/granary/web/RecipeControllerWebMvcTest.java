@@ -173,12 +173,14 @@ class RecipeControllerWebMvcTest {
     }
 
     @Test
-    void getByCategory_returnsMatches() throws Exception {
-        when(recipeService.getByTag("breakfast")).thenReturn(List.of(new RecipeResponseDto()));
+    void getByTag_returnsPageWithDefaults() throws Exception {
+        when(recipeService.getByTag("breakfast", 0, 20))
+                .thenReturn(new PageImpl<>(List.of(new RecipeResponseDto()), PageRequest.of(0, 20), 1));
 
         mockMvc.perform(get("/api/recipes/tag/breakfast"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)));
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.totalElements").value(1));
     }
 
     @Test

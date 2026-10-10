@@ -51,6 +51,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/recipes/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/users/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/ingredients/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/tags/**").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

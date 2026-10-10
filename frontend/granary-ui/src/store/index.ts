@@ -5,6 +5,7 @@ import { bookmarkApi } from './bookmarkApi';
 import { commentApi } from './commentApi';
 import { userApi } from './userApi';
 import { ingredientSuggestionApi } from './ingredientSuggestionApi';
+import { tagApi } from './tagApi';
 import authReducer, { logout, setCredentials } from './authSlice';
 
 const authChangeListener = createListenerMiddleware();
@@ -25,6 +26,7 @@ export const store = configureStore({
     [commentApi.reducerPath]: commentApi.reducer,
     [userApi.reducerPath]: userApi.reducer,
     [ingredientSuggestionApi.reducerPath]: ingredientSuggestionApi.reducer,
+    [tagApi.reducerPath]: tagApi.reducer,
     auth: authReducer,
   },
   middleware: (getDefaultMiddleware) =>
@@ -34,7 +36,8 @@ export const store = configureStore({
       bookmarkApi.middleware,
       commentApi.middleware,
       userApi.middleware,
-      ingredientSuggestionApi.middleware
+      ingredientSuggestionApi.middleware,
+      tagApi.middleware
     ),
 });
 
