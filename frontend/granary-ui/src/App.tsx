@@ -9,6 +9,8 @@ import { ProfilePage } from './components/ProfilePage';
 import { PublicProfilePage } from './components/PublicProfilePage';
 import { AuthForm } from './components/AuthForm';
 import { RequireAuth } from './components/RequireAuth';
+import { SearchBar } from './components/SearchBar';
+import { SearchResultsPage } from './components/SearchResultsPage';
 import { useEffect, useRef } from 'react';
 import { logout, sessionExpiryHandled } from './store/authSlice';
 import './styles/tokens.css';
@@ -66,6 +68,7 @@ export default function App() {
   };
 
   const isActive = (path: string) => location.pathname === path;
+  const searchQuery = location.pathname === '/search' ? new URLSearchParams(location.search).get('q') ?? '' : '';
 
   return (
     <div className="app-shell">
@@ -74,6 +77,8 @@ export default function App() {
         <Link to="/" className="app-logo">
           <h1>Granary</h1>
         </Link>
+
+        <SearchBar key={searchQuery} initialQuery={searchQuery} />
 
         <nav className="view-toggle" role="tablist">
           <Link role="tab" aria-selected={isActive('/')} className={isActive('/') ? 'active' : ''} to="/">
@@ -158,6 +163,10 @@ export default function App() {
             element={<RecipeFocusPage onEdit={startEditing} currentUsername={username} />}
           />
           <Route path="/users/:username" element={<PublicProfilePage />} />
+          <Route
+            path="/search"
+            element={<SearchResultsPage onEdit={startEditing} currentUsername={username} />}
+          />
         </Routes>
       </main>
     </div>

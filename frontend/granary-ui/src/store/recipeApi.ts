@@ -10,6 +10,10 @@ export interface GetRecipesParams {
   size?: number;
 }
 
+export interface SearchRecipesParams extends GetRecipesParams {
+  query: string;
+}
+
 export const recipeApi = createApi({
   reducerPath: 'recipeApi',
   baseQuery: authedBaseQuery('/api/recipes'),
@@ -19,6 +23,19 @@ export const recipeApi = createApi({
       query: (params) => ({
         url: '',
         params: { page: params?.page ?? 0, size: params?.size ?? DEFAULT_RECIPES_PAGE_SIZE },
+      }),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.content.map(({ id }) => ({ type: 'Recipe' as const, id })),
+              { type: 'Recipe', id: 'LIST' },
+            ]
+          : [{ type: 'Recipe', id: 'LIST' }],
+    }),
+    searchRecipes: builder.query<PageResponseDto<RecipeResponseDto>, SearchRecipesParams>({
+      query: ({ query, page, size }) => ({
+        url: '/search',
+        params: { query, page: page ?? 0, size: size ?? DEFAULT_RECIPES_PAGE_SIZE },
       }),
       providesTags: (result) =>
         result
@@ -99,6 +116,7 @@ export const recipeApi = createApi({
 
 export const {
   useGetRecipesQuery,
+  useSearchRecipesQuery,
   useGetMyRecipesQuery,
   useGetPopularRecipesQuery,
   useGetRecipeByIdQuery,

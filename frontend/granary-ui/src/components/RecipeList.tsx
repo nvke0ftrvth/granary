@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { DEFAULT_RECIPES_PAGE_SIZE, useGetRecipesQuery } from '../store/recipeApi';
 import { RecipeCard } from './RecipeCard';
 import { RecipeListSkeleton } from './RecipeCardSkeleton';
+import { Pagination } from './Pagination';
 import type { RecipeResponseDto } from '../types/recipe';
 
 interface RecipeListProps {
@@ -46,27 +47,13 @@ export function RecipeList({ onEdit, currentUsername }: RecipeListProps) {
         ))}
       </div>
 
-      {totalPages > 1 && (
-        <nav className="pagination" aria-label="Recipe list pages">
-          <button
-            type="button"
-            onClick={() => setPage((p) => Math.max(p - 1, 0))}
-            disabled={page === 0 || isFetching}
-          >
-            Previous
-          </button>
-          <span className="pagination-status">
-            Page {page + 1} of {totalPages}
-          </span>
-          <button
-            type="button"
-            onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
-            disabled={page >= totalPages - 1 || isFetching}
-          >
-            Next
-          </button>
-        </nav>
-      )}
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        disabled={isFetching}
+        label="Recipe list pages"
+      />
     </div>
   );
 }

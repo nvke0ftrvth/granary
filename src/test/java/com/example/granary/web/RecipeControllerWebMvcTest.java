@@ -182,11 +182,30 @@ class RecipeControllerWebMvcTest {
     }
 
     @Test
-    void search_withQueryParam_returnsOk() throws Exception {
-        when(recipeService.search("pancake")).thenReturn(List.of(new RecipeResponseDto()));
+    void search_withQueryParam_returnsPageWithDefaults() throws Exception {
+        when(recipeService.search("pancake", 0, 20, null))
+                .thenReturn(new PageImpl<>(List.of(new RecipeResponseDto()), PageRequest.of(0, 20), 1));
 
         mockMvc.perform(get("/api/recipes/search").param("query", "pancake"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(20))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1));
+    }
+
+    @Test
+    void search_passesPageSizeAndSortThrough() throws Exception {
+        when(recipeService.search("pancake", 2, 5, "title,asc"))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(2, 5), 10));
+
+        mockMvc.perform(get("/api/recipes/search")
+                        .param("query", "pancake").param("page", "2").param("size", "5").param("sort", "title,asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(2))
+                .andExpect(jsonPath("$.size").value(5))
+                .andExpect(jsonPath("$.totalElements").value(10));
     }
 
     @Test

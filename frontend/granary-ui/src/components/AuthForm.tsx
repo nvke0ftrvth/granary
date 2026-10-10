@@ -101,13 +101,16 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
           {isLoading ? 'Please wait…' : isRegister ? 'Create account' : 'Log in'}
         </button>
 
-        <button
-          type="button"
-          className="auth-mode-toggle"
-          onClick={() => setMode(isRegister ? 'login' : 'register')}
-        >
-          {isRegister ? 'Already have an account? Log in' : "Don't have an account? Register"}
-        </button>
+        <p className="auth-switch">
+          {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
+          <button
+            type="button"
+            className="auth-mode-toggle"
+            onClick={() => setMode(isRegister ? 'login' : 'register')}
+          >
+            {isRegister ? 'Log in' : 'Register'}
+          </button>
+        </p>
       </form>
     </div>
   );

@@ -4,13 +4,14 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +36,7 @@ import com.example.granary.repo.CommentVoteRepository;
 import com.example.granary.repo.IngredientSuggestionRepository;
 import com.example.granary.repo.RecipeImageRepository;
 import com.example.granary.repo.RecipeRepository;
+import com.example.granary.repo.RecipeSpecifications;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +48,7 @@ public class RecipeService {
 
     private static final int MAX_IMAGES_PER_RECIPE = 3;
     private static final long MAX_IMAGE_SIZE_BYTES = 2L * 1024 * 1024; // 2MB
+    private static final Set<String> SEARCH_SORT_FIELDS = Set.of("title", "updated");
 
     private final RecipeRepository recipeRepository;
     private final CurrentUserService currentUserService;
@@ -79,8 +82,40 @@ public class RecipeService {
     public Page<RecipeResponseDto> getAll(int page, int size) {
         log.debug("Fetching recipes page {} (size {}), sorted by bookmark count desc", page, size);
         Pageable pageable = PageRequest.of(page, size);
-        Page<Recipe> recipes = recipeRepository.findAllOrderByBookmarkCountDesc(pageable);
+        return withBookmarkCounts(recipeRepository.findAllOrderByBookmarkCountDesc(pageable));
+    }
 
+    /**
+     * Recipes where every word of the query appears in the title, description or a tag, paged and sorted by
+     * {@code sort} ("field" or "field,asc|desc" over {@link #SEARCH_SORT_FIELDS}), newest first by default.
+     */
+    public Page<RecipeResponseDto> search(String query, int page, int size, String sort) {
+        List<String> words = RecipeSpecifications.searchWords(query);
+        if (words.isEmpty()) {
+            throw new IllegalArgumentException("Search query must not be blank");
+        }
+        log.debug("Searching recipes for {} (page {}, size {}, sort {})", words, page, size, sort);
+        Pageable pageable = PageRequest.of(page, size, searchSort(sort));
+        return withBookmarkCounts(recipeRepository.findAll(RecipeSpecifications.matchesAllWords(words), pageable));
+    }
+
+    private static Sort searchSort(String sort) {
+        if (sort == null || sort.isBlank()) {
+            return Sort.by(Sort.Order.desc("updated"), Sort.Order.desc("id"));
+        }
+        String[] parts = sort.split(",", -1);
+        String field = parts[0].trim();
+        if (!SEARCH_SORT_FIELDS.contains(field) || parts.length > 2) {
+            throw new IllegalArgumentException("Cannot sort by '" + sort + "'. Use one of " + SEARCH_SORT_FIELDS
+                    + ", optionally followed by ,asc or ,desc");
+        }
+        Sort.Direction direction = parts.length == 2
+                ? Sort.Direction.fromString(parts[1].trim())
+                : Sort.Direction.ASC;
+        return Sort.by(new Sort.Order(direction, field), Sort.Order.desc("id"));
+    }
+
+    private Page<RecipeResponseDto> withBookmarkCounts(Page<Recipe> recipes) {
         List<Long> recipeIds = recipes.getContent().stream().map(Recipe::getId).toList();
         Map<Long, Long> bookmarkCountsById = bookmarkRepository.countByRecipeIdIn(recipeIds).stream()
                 .collect(Collectors.toMap(BookmarkCountProjection::getRecipeId, BookmarkCountProjection::getCount));
@@ -156,16 +191,6 @@ public class RecipeService {
         log.info("Recipe with id " + id + " deleted");
     }
 
-
-    @Query("SELECT r FROM Recipe r WHERE " +
-       "LOWER(r.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-       "LOWER(r.description) LIKE LOWER(CONCAT('%', :query, '%'))")
-    public List<RecipeResponseDto> search(String query){
-    return recipeRepository.findByTitleContainingIgnoreCase(query)
-            .stream()
-            .map(recipeMapper::toResponseDto)
-            .toList();
-    }
 
     private List<RecipeIngredient> resolveIngredients(List<RecipeIngredientRequestDto> lines) {
         if (lines == null) {
