@@ -30,6 +30,7 @@ import com.example.granary.dto.RecipeResponseDto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -86,10 +87,15 @@ public class RecipeController {
     }
 
 
-    // GET search recipes by title
+    // GET recipes where every word of the query appears in the title, description, a tag or an ingredient, paginated
+    // sort is optional: "relevance" (default), or "title"/"updated" optionally followed by ",asc" or ",desc"
     @GetMapping("/search")
-    public ResponseEntity<List<RecipeResponseDto>> search(@RequestParam String query) {
-        return ResponseEntity.ok(recipeService.search(query));
+    public ResponseEntity<PageResponseDto<RecipeResponseDto>> search(
+            @RequestParam @NotBlank String query,
+            @RequestParam(defaultValue = DEFAULT_PAGE) @Min(0) int page,
+            @RequestParam(defaultValue = DEFAULT_PAGE_SIZE) @Min(1) @Max(MAX_PAGE_SIZE) int size,
+            @RequestParam(required = false) String sort) {
+        return ResponseEntity.ok(PageResponseDto.of(recipeService.search(query, page, size, sort)));
     }
 
 
